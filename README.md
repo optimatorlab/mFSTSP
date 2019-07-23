@@ -11,6 +11,10 @@ Requires **Gurobi**.
 https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3338436
 
 
+### DESCRIPTION:
+
+This repository provides source codes to run the mFSTSP. The mFSTSP is a variant of the classical TSP, in which one or many UAVs coordinate with a truck to deliver parcels in the minimum possible time. The codes provided here consist of both the integer programming (IP) implementation, and the heuristic algorithm (to solve larger problems). To run this package, it is necessary to have the python modules outlined below. The details on how to run this script (and the options available) is provided below.
+
 
 ### INSTALLING ADDITIONAL PYTHON MODULES:
 
@@ -29,11 +33,6 @@ sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython
 sudo pip install geopy
 ```
 
-4) R TSP
-```
-R		[NOTE:  This was ono version 3.0.2]
-> install.packages("TSP")
-```
 ### CONTENTS OF THIS PACKAGE:
 
 1) It contains a main python script called 'main.py' which calls all other python scripts in this package to solve the mFSTSP.
