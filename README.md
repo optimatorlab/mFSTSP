@@ -62,27 +62,27 @@ cd ~/mFSTSP
 python main.py <problemName> <vehicleFileID> <cutoffTime> <problemType> <numUAVs> <numTrucks> <requireTruckAtDepot> <requireDriver> <Etype> <ITER>
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **Description of the command line arguments:**
-    
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; problemName: Name of the folder containing the data for a particular problem instance
+**Description of the command line arguments:**
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; vehicleFileID: 101, 102, 103, 104 --> Chooses a particular UAV type depending on the file ID.
+* problemName: Name of the folder containing the data for a particular problem instance
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cutoffTime: Gurobi cut-off time (in seconds) of IP model (e.g. 3600). In case of heuristic, it is the Gurobi cut-off time (in seconds) of (P3) model (e.g. 5).
+* vehicleFileID: 101, 102, 103, 104 --> Chooses a particular UAV type depending on the file ID.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; problemType: 1 (to solve mFSTSP using IP) or 2 (to solve mFSTSP using Heuristic).
+* cutoffTime: Gurobi cut-off time (in seconds) of IP model (e.g. 3600). In case of heuristic, it is the Gurobi cut-off time (in seconds) of (P3) model (e.g. 5).
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; numUAVs: Number of UAVs available in the problem (e.g. 3).
+* problemType: 1 (to solve mFSTSP using IP) or 2 (to solve mFSTSP using Heuristic).
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; numTrucks: Number of trucks available in the problem (currently only solvable for 1 truck). Assigning -1 to this parameter ignores its value and considers 1 truck.
+* numUAVs: Number of UAVs available in the problem (e.g. 3).
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; requireTruckAtDepot:  0 (false) or 1 (true) --> If the truck is required to launch/retrieve at the depot.
+* numTrucks: Number of trucks available in the problem (currently only solvable for 1 truck). Assigning -1 to this parameter ignores its value and considers 1 truck.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; requireDriver: 0 (false) or 1 (true). False --> UAVs can launch/land without driver (so driver can serve customer).
+* requireTruckAtDepot:  0 (false) or 1 (true) --> If the truck is required to launch/retrieve at the depot.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Etype: 1 (NON-LINEAR), 2 (LINEAR), 3 (CONSTANT), 4 (UNLIMITED), 5 (CONSTANT DISTANCE) --> Endurance model being used.
+* requireDriver: 0 (false) or 1 (true). False --> UAVs can launch/land without driver (so driver can serve customer).
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ITER: Number of iterations the heuristic runs at each LTL. Not applicable when running the IP model, therefore it can be assigned any value when running the IP. (Note that in the heuristic described in the paper, ITER = 1 is considered throughout)
+* Etype: 1 (NON-LINEAR), 2 (LINEAR), 3 (CONSTANT), 4 (UNLIMITED), 5 (CONSTANT DISTANCE) --> Endurance model being used.
+
+* ITER: Number of iterations the heuristic runs at each LTL. Not applicable when running the IP model, therefore it can be assigned any value when running the IP. (Note that in the heuristic described in the paper, ITER = 1 is considered throughout)
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **e.g.**
 
