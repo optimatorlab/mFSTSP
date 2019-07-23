@@ -37,4 +37,4 @@ def parseCSVstring(filename, returnJagged=False, fillerValue=-1, delimiter=',', 
 def printMatrix(matrix):
 	for row in matrix:
 		for cell in row:
-			print cell,
+			print(cell),

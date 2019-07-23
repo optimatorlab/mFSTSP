@@ -181,6 +181,9 @@ def solve_tsp_callback(node, vehicle, travel):
 	# Generate a solution via DFJ - Callback:
 	m = Model("dfj_callback")
 
+	# Tell Gurobi not to print to a log file
+	m.params.OutputFlag = 0
+
 	# Create variables:
 	x = {}
 
@@ -254,8 +257,8 @@ def solve_tsp_callback(node, vehicle, travel):
 		elif ((i == 0) and (j == c+1)):
 			description 	= 'Truck 1 was not used'
 		else:
-			print 'WE HAVE A PROBLEM.  What is the proper description?'
-			print '\t Quitting Now.'
+			print('WE HAVE A PROBLEM.  What is the proper description?')
+			print('\t Quitting Now.')
 			exit()
 
 		if (0 in assignments[1][statusID]):

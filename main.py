@@ -26,9 +26,8 @@
 
 # RUNNING THIS SCRIPT:
 
-# python mfstsp_mission_control.py <city> <problemName> <vehicleFileID> <cutoffTime> <problemType> <numUAVs> <numTrucks> <requireTruckAtDepot> <requireDriver>
+# python main.py <problemName> <vehicleFileID> <cutoffTime> <problemType> <numUAVs> <numTrucks> <requireTruckAtDepot> <requireDriver> <Etype> <ITER>
 
-# city: 'buffalo' or 'seattle'
 # problemName: Name of the folder containing the data for a particular problem instance
 # vehicleFileID: 101, 102, 103, 104 (Chooses a particular UAV type depending on the file ID)
 # cutoffTime: Gurobi cut-off time of IP model. In case of heuristic, it is the Gurobi cut-off time of (P3) model
@@ -37,15 +36,18 @@
 # numTrucks: Number of trucks available in the problem (currently only solvable for 1 truck)
 # requireTruckAtDepot:  0 (false) or 1 (true).
 # requireDriver: 0 (false) or 1 (true). False --> UAVs can launch/land without driver (so driver can serve customer).
+# Etype: Endurance type --> 1 (NON-LINEAR), 2 (LINEAR), 3 (CONSTANT), 4 (UNLIMITED), 5 (CONSTANT DISTANCE)
+# ITER: Number of iterations the heuristic runs at each LTL (Not applicable when running the IP model, therefore it can be assigned any value when running the IP)
 
 
 # 1) Solving the mFSTSP optimally:
-#    python mfstsp_mission_control.py seattle 20170608T121632668184 101 3600 1 3 -1 1 1
+#    python main.py 20170608T121632668184 101 3600 1 3 -1 1 1 1 -1
 #		numTrucks is ignored
+#		ITER is ignored
 #		The UAVs are defined in tbl_vehicles.  If you ask for more UAVs than are defined, you'll get a warning.
 
 # 2) Solving the mFSTSP via a heuristic:
-#    python mfstsp_mission_control.py seattle 20170608T121632668184 101 5 2 3 -1 1 1
+#    python main.py 20170608T121632668184 101 5 2 3 -1 1 1 1 1
 #		numTrucks is ignored
 #		The UAVs are defined in tbl_vehicles.  If you ask for more UAVs than are defined, you'll get a warning.
 
@@ -76,7 +78,6 @@ import distance_functions
 
 # =============================================================
 startTime 		= time.time()
-homeDirectory 	= os.environ['HOME']  # '/home/murray'
 
 METERS_PER_MILE = 1609.34
 
@@ -159,21 +160,22 @@ class missionControl():
 
 		timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
 
-		# python mfstsp_mission_control.py seattle 20170608T121632668184 101 3600 1 3 -1 1 1
-		# Capture 9 inputs from the command line
+		# python main.py 20170608T121632668184 101 3600 1 3 -1 1 1 1 -1
+		# Capture 10 inputs from the command line
 		# NOTE: sys.argv[0] is the name of the python file
 		# Try "print sys.argv" (without the quotes) to see the sys.argv list
-		# 9 inputs --> the sys.argv list should have 10 elements.
-		if (len(sys.argv) == 10):
-			city				= sys.argv[1]
-			problemName 		= sys.argv[2]
-			vehicleFileID		= int(sys.argv[3])			
-			cutoffTime 			= float(sys.argv[4])
-			problemType 		= int(sys.argv[5])
-			numUAVs				= int(sys.argv[6])
-			numTrucks			= int(sys.argv[7])
-			requireTruckAtDepot = bool(int(sys.argv[8]))
-			requireDriver 		= bool(int(sys.argv[9]))
+		# 10 inputs --> the sys.argv list should have 11 elements.
+		if (len(sys.argv) == 11):
+			problemName 		= sys.argv[1]
+			vehicleFileID		= int(sys.argv[2])			
+			cutoffTime 			= float(sys.argv[3])
+			problemType 		= int(sys.argv[4])
+			numUAVs				= int(sys.argv[5])
+			numTrucks			= int(sys.argv[6])
+			requireTruckAtDepot = bool(int(sys.argv[7]))
+			requireDriver 		= bool(int(sys.argv[8]))
+			Etype				= int(sys.argv[9])
+			ITER 				= int(sys.argv[10])
 			
 
 			self.locationsFile = 'Problems/%s/tbl_locations.csv' % (problemName)
@@ -186,7 +188,7 @@ class missionControl():
 			self.distmatrixFile = 'Problems/%s/tbl_truck_travel_data_PG.csv' % (problemName)
 
 		else:
-			print 'ERROR: You passed', len(sys.argv)-1, 'input parameters.'
+			print('ERROR: You passed %d input parameters.' % (len(sys.argv)-1))
 			quit()
 
 
@@ -217,16 +219,16 @@ class missionControl():
 		# Now, call the IP / Heuristic model:
 		isOptimal = False
 		if (problemType == 1):
-			print 'Calling Gurobi to solve mFSTSP...'
-			[objVal, assignments, packages, isOptimal, bestBound, waitingTruck, waitingUAV] = solve_mfstsp_IP(self.node, self.vehicle, self.travel, cutoffTime, requireTruckAtDepot, requireDriver)
-			print 'Gubori is Done.  It returned something'
+			print('Calling Gurobi to solve mFSTSP...')
+			[objVal, assignments, packages, isOptimal, bestBound, waitingTruck, waitingUAV] = solve_mfstsp_IP(self.node, self.vehicle, self.travel, cutoffTime, requireTruckAtDepot, requireDriver, Etype)
+			print('Gubori is Done.  It returned something')
 		elif (problemType == 2):
-			print 'Calling a Heuristic to solve mFSTSP...'
-			[objVal, assignments, packages, waitingTruck, waitingUAV] = solve_mfstsp_heuristic(self.node, self.vehicle, self.travel, cutoffTime, problemName, problemType, requireTruckAtDepot, requireDriver)
+			print('Calling a Heuristic to solve mFSTSP...')
+			[objVal, assignments, packages, waitingTruck, waitingUAV] = solve_mfstsp_heuristic(self.node, self.vehicle, self.travel, cutoffTime, problemName, problemType, requireTruckAtDepot, requireDriver, Etype, ITER)
 			bestBound = -1
-			print 'The mFSTSP Heuristic is Done.  It returned something'
+			print('The mFSTSP Heuristic is Done.  It returned something')
 		else:
-			print 'Sorry, I do not understand problemType = %d.  Bye.' % (problemType)
+			print('Sorry, I do not understand problemType = %d.  Bye.' % (problemType))
 
 
 		numUAVcust			= 0
@@ -241,13 +243,13 @@ class missionControl():
 			
 		# Write in the performance_summary file:
 		total_time = time.time() - startTime
-		print "Total time for the whole process: %f" % (total_time)
-		print "Objective Function Value: %f" % (objVal)
+		print("Total time for the whole process: %f" % (total_time))
+		print("Objective Function Value: %f" % (objVal))
 
 		runString = ' '.join(sys.argv[0:])
 
 		myFile = open('performance_summary.csv','a')
-		str = '%s, %d, %f, %d, %s, %d, %d, %s, %s, %s,' % (problemName, vehicleFileID, cutoffTime, problemType, problemTypeString[problemType], numUAVs, numTrucks, requireTruckAtDepot, requireDriver, runString)
+		str = '%s, %d, %f, %d, %s, %d, %d, %s, %s, %d, %d, %s,' % (problemName, vehicleFileID, cutoffTime, problemType, problemTypeString[problemType], numUAVs, numTrucks, requireTruckAtDepot, requireDriver, Etype, ITER, runString)
 		myFile.write(str)
 
 		numCustomers = len(self.node) - 2
@@ -255,13 +257,13 @@ class missionControl():
 		myFile.write(str)
 					
 		myFile.close()
-		print "\nSee 'performance_summary.csv' for statistics.\n"
+		print("\nSee 'performance_summary.csv' for statistics.\n")
 
 
 		# Write in the solution file:
 		myFile = open(self.solutionSummaryFile, 'a')
-		myFile.write('problemName, vehicleFileID, cutoffTime, problemTypeString, numUAVs, numTrucks, requireTruckAtDepot, requireDriver \n')
-		str = '%s, %d, %f, %s, %d, %d, %s, %s \n\n' % (problemName, vehicleFileID, cutoffTime, problemTypeString[problemType], numUAVs, numTrucks, requireTruckAtDepot, requireDriver)
+		myFile.write('problemName, vehicleFileID, cutoffTime, problemTypeString, numUAVs, numTrucks, requireTruckAtDepot, requireDriver, Etype, ITER \n')
+		str = '%s, %d, %f, %s, %d, %d, %s, %s, %d, %d \n\n' % (problemName, vehicleFileID, cutoffTime, problemTypeString[problemType], numUAVs, numTrucks, requireTruckAtDepot, requireDriver, Etype, ITER)
 		myFile.write(str)
 
 		myFile.write('Objective Function Value: %f \n\n' % (objVal))
@@ -301,7 +303,7 @@ class missionControl():
 					elif (statusID == STATIONARY_TRUCK_EMPTY):
 						status = 'Truck is stationary with no UAVs on board'
 					else:
-						print 'UNKNOWN statusID.'
+						print('UNKNOWN statusID.')
 						quit()
 
 					
@@ -318,7 +320,7 @@ class missionControl():
 					elif (assignments[v][statusID][statusIndex].ganttStatus == GANTT_FINISHED):
 						ganttStr = 'Vehicle Tasks Complete'
 					else:
-						print 'UNKNOWN ganttStatus'
+						print('UNKNOWN ganttStatus')
 						quit()
 					
 					assignDF.loc[indexDF] = [v, vehicleType, status, assignments[v][statusID][statusIndex].startTime, assignments[v][statusID][statusIndex].startNodeID, assignments[v][statusID][statusIndex].endTime, assignments[v][statusID][statusIndex].endNodeID, assignments[v][statusID][statusIndex].description, ganttStr]	
@@ -329,7 +331,7 @@ class missionControl():
 		# Add this assignment dataframe to the solution file:
 		assignDF.to_csv(self.solutionSummaryFile, mode='a', header=True, index=False)
 		
-		print "\nSee '%s' for solution summary.\n" % (self.solutionSummaryFile)
+		print("\nSee '%s' for solution summary.\n" % (self.solutionSummaryFile))
 		
 
 
@@ -360,8 +362,8 @@ class missionControl():
 				self.vehicle[vehicleID] = make_vehicle(vehicleType, takeoffSpeed, cruiseSpeed, landingSpeed, yawRateDeg, cruiseAlt, capacityLbs, launchTime, recoveryTime, serviceTime, batteryPower, flightRange)
 
 		if (tmpUAVs < numUAVs):
-			print "WARNING: You requested %d UAVs, but we only have data on %d UAVs." % (numUAVs, tmpUAVs)
-			print "\t We'll solve the problem with %d UAVs.  Sorry." % (tmpUAVs)
+			print("WARNING: You requested %d UAVs, but we only have data on %d UAVs." % (numUAVs, tmpUAVs))
+			print("\t We'll solve the problem with %d UAVs.  Sorry." % (tmpUAVs))
 
 		# a)  tbl_locations.csv
 		rawData = parseCSVstring(self.locationsFile, returnJagged=False, fillerValue=-1, delimiter=',', commentChar='%')
@@ -405,8 +407,8 @@ class missionControl():
 
 		else:
 			# Travel matrix file does not exist
-			print "ERROR: Truck travel data is not available. Please provide a data matrix in the following format in a CSV file, and try again:\n"
-			print "from node ID | to node ID | travel time [seconds] | travel distance [meters]\n"
+			print("ERROR: Truck travel data is not available. Please provide a data matrix in the following format in a CSV file, and try again:\n")
+			print("from node ID | to node ID | travel time [seconds] | travel distance [meters]\n")
 			exit()
 
 
@@ -414,5 +416,5 @@ if __name__ == '__main__':
 	try:
 		missionControl()
 	except:
-		print "There was a problem.  Sorry things didn't work out.  Bye."
+		print("There was a problem.  Sorry things didn't work out.  Bye.")
 		raise

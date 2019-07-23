@@ -243,10 +243,10 @@ def mfstsp_heuristic_2_asgn_uavs(node, eee, eeePrime, N_zero, N_plus, C, V, c, a
 
 	if (len(bigZ) == 0):	# No infeasible customers
 		myInsertCost = 0
-		print "len(bigZ) = 0"
+		# print("len(bigZ) = 0")
 	else:	# Some infeasible UAV customers
 
-		print "len(bigZ) = %d" % len(bigZ)
+		# print("len(bigZ) = %d" % len(bigZ))
 
 		bestCost = float('inf')
 		bestIPcombo = []
