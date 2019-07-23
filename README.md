@@ -16,7 +16,7 @@ https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3338436
 This repository provides source codes to run the mFSTSP. The mFSTSP is a variant of the classical TSP, in which one or many UAVs coordinate with a truck to deliver parcels in the minimum possible time. The codes provided here consist of both the integer programming (IP) implementation, and the heuristic algorithm (to solve larger problems). To run this package, it is necessary to have the python modules outlined below. The details on how to run this script (and the options available) is provided below.
 
 
-### INSTALLING ADDITIONAL PYTHON MODULES:
+### INSTALLING ADDITIONAL PYTHON MODULES (only for Linux. For Windows/Mac, use the command line arguments accordingly):
 
 1) pandas:
 ```
@@ -45,7 +45,7 @@ sudo pip install geopy
     
     It is necessary to have these two files in the subfolder corresponding to a problem instance, in order to solve the mFSTSP for that instance.
     
-3) The problems folder also contains four CSV files, that have the information on UAV specifications. Depending on the CSV file we choose (between 101, 102, 103, and 104) to solve a problem instance, we select a set of UAVs with particular speed and range.
+3) The problems folder also contains four CSV files, that have the information on UAV specifications. Depending on the CSV file we choose (between 101, 102, 103, and 104) to solve a problem instance, we select a set of UAVs with particular speed and range. The appropriate CSV file can be chosen through the command line argument, which is described in 'RUNNING THE SCRIPT' section.
 
 
 ### RUNNING THE SCRIPT:
