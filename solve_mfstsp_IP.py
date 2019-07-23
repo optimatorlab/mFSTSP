@@ -8,9 +8,8 @@ from parseCSV import *
 from gurobipy import *
 from collections import defaultdict
 
-from distance_functions import *
-
 import endurance_calculator
+import distance_functions
 
 
 # =============================================================
@@ -39,6 +38,8 @@ GANTT_DELIVER	= 3
 GANTT_RECOVER	= 4
 GANTT_LAUNCH	= 5
 GANTT_FINISHED	= 6
+
+METERS_PER_MILE = 1609.34
 
 
 # There's a package color that corresponds to the VEHICLE that delivered the package.
@@ -94,7 +95,7 @@ class make_packages:
 		self.icon 			= icon
 
 
-def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER):
+def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, Etype):
 	
 	# Establish Gurobi data sets
 	C 			= []
@@ -139,7 +140,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 				elif (vehicle[vehicleID].vehicleType == TYPE_UAV):
 					tauprime[vehicleID][i][j] = travel[vehicleID][i][j].totalTime
 				else:
-					print "ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType)
+					print("ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType))
 					quit()	
 					
 			# NOTE: We need to capture the travel time to node c+1 (which is the same physical location as node 0):
@@ -150,7 +151,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 			elif (vehicle[vehicleID].vehicleType == TYPE_UAV):
 				tauprime[vehicleID][i][c+1] = travel[vehicleID][i][0].totalTime
 			else:
-				print "ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType)
+				print("ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType))
 				quit()	
 
 
@@ -165,12 +166,25 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 							
 							# Calculate the endurance for each sortie:
 							if (k == c+1):
-								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, 0)
+								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, 0, Etype)
 							else:	
-								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, k)
+								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, k, Etype)
 							
-							if (tauprime[v][i][j] + node[j].serviceTimeUAV + tauprime[v][j][k] <= eee[v][i][j][k]):
-								P.append([v,i,j,k])
+							# If endurance is based on distance, build the P set using distance limitations:
+							if Etype == 5:
+								DISTij = distance_functions.groundDistanceStraight(node[i].latDeg*(math.pi/180), node[i].lonDeg*(math.pi/180), node[j].latDeg*(math.pi/180), node[j].lonDeg*(math.pi/180))
+								DISTjk = distance_functions.groundDistanceStraight(node[j].latDeg*(math.pi/180), node[j].lonDeg*(math.pi/180), node[k].latDeg*(math.pi/180), node[k].lonDeg*(math.pi/180))
+
+								if vehicle[v].flightRange == 'low':
+									if DISTij + DISTjk <= 6*METERS_PER_MILE:
+										P.append([v,i,j,k])
+								elif vehicle[v].flightRange == 'high':
+									if DISTij + DISTjk <= 12*METERS_PER_MILE:
+										P.append([v,i,j,k])
+
+							else:
+								if (tauprime[v][i][j] + node[j].serviceTimeUAV + tauprime[v][j][k] <= eee[v][i][j][k]):
+									P.append([v,i,j,k])
 
 
 	for v in V:
@@ -513,10 +527,15 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 				if (i != j):
 					# Constraint (21):
 					m.addConstr(decvarchecktprime[v][j] >= decvarhattprime[v][i] + tauprime[v][i][j] - M*(1 - quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P)), "Constr.21.%d.%d.%d" % (v,j,i))	
+
+					# Constraint (21b):
+					m.addConstr(decvarchecktprime[v][j] <= decvarhattprime[v][i] + tauprime[v][i][j] + M*(1 - quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P)), "Constr.21b.%d.%d.%d" % (v,j,i))	
 			
 			# Constraint (22):
 			m.addConstr(decvarhattprime[v][j] >= decvarchecktprime[v][j] + sigmaprime[j]*(quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for i in N_zero if i != j)), "Constr.22.%d.%d" % (v,j))	
 
+			# Constraint (22b):
+			m.addConstr(decvarhattprime[v][j] <= decvarchecktprime[v][j] + sigmaprime[j] + M*(1 - quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for i in N_zero if i != j)), "Constr.22b.%d.%d" % (v,j))	
 
 		for k in N_zero:
 			if (REQUIRE_TRUCK_AT_DEPOT):
@@ -721,7 +740,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 	
 	else:
 		# We found a feasible solution
-		print '\nOBJECTIVE FUNCTION VALUE:', m.objVal
+		print('\nOBJECTIVE FUNCTION VALUE: %f' % (m.objVal))
 
 		OFV = m.objVal
 	
@@ -751,13 +770,13 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 						x.append([i,j])
 						packages[j] = make_packages(TYPE_TRUCK, node[j].latDeg, node[j].lonDeg, decvarbart[j].x, packageIcons[1])
 	
-						print 'x[%d][%d] = %f' % (i,j,decvarx[i][j].x)
-						print '\t Depart from %d at %f' % (i, decvarhatt[i].x)
-						print '\t tau[%d][%d] = %f' % (i, j, tau[i][j])
-						print '\t Arrive to %d at %f' % (j, decvarcheckt[j].x)
-						print '\t sigma[%d] = %f' % (j, sigma[j])
-						print '\t Complete Service: %f' % (decvarbart[j].x)
-						print '\t Depart from %d at %f' % (j, decvarhatt[j].x)
+						print('x[%d][%d] = %f' % (i,j,decvarx[i][j].x))
+						print('\t Depart from %d at %f' % (i, decvarhatt[i].x))
+						print('\t tau[%d][%d] = %f' % (i, j, tau[i][j]))
+						print('\t Arrive to %d at %f' % (j, decvarcheckt[j].x))
+						print('\t sigma[%d] = %f' % (j, sigma[j]))
+						print('\t Complete Service: %f' % (decvarbart[j].x))
+						print('\t Depart from %d at %f' % (j, decvarhatt[j].x))
 						
 						i = j
 	
@@ -775,16 +794,16 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 									y.append([v,i,j,k])
 									packages[j] = make_packages(TYPE_UAV, node[j].latDeg, node[j].lonDeg, decvarhattprime[v][j].x, packageIcons[0])
 	
-									print 'y[%d][%d][%d][%d] = %f' % (v,i,j,k,decvary[v][i][j][k].x)
-									print '\t Arrive at i = %d: %f' % (i, decvarchecktprime[v][i].x)
-									print '\t Launch from i = %d: %f' % (i, decvarhattprime[v][i].x)
-									print '\t tauprime[%d][%d][%d] = %f' % (v, i, j, tauprime[v][i][j])
-									print '\t Arrive at cust j = %d: %f' % (j, decvarchecktprime[v][j].x)
-									print '\t sigmaprime[%d] = %f' % (j, sigmaprime[j])
-									print '\t Depart cust j = %d: %f' % (j, decvarhattprime[v][j].x)
-									print '\t tauprime[%d][%d][%d] = %f' % (v,j,k,tauprime[v][j][k])
-									print '\t Arrive at k = %d: %f' % (k, decvarchecktprime[v][k].x)
-									print '\t Depart from k = %d: %f' % (k, decvarhattprime[v][k].x)
+									print('y[%d][%d][%d][%d] = %f' % (v,i,j,k,decvary[v][i][j][k].x))
+									print('\t Arrive at i = %d: %f' % (i, decvarchecktprime[v][i].x))
+									print('\t Launch from i = %d: %f' % (i, decvarhattprime[v][i].x))
+									print('\t tauprime[%d][%d][%d] = %f' % (v, i, j, tauprime[v][i][j]))
+									print('\t Arrive at cust j = %d: %f' % (j, decvarchecktprime[v][j].x))
+									print('\t sigmaprime[%d] = %f' % (j, sigmaprime[j]))
+									print('\t Depart cust j = %d: %f' % (j, decvarhattprime[v][j].x))
+									print('\t tauprime[%d][%d][%d] = %f' % (v,j,k,tauprime[v][j][k]))
+									print('\t Arrive at k = %d: %f' % (k, decvarchecktprime[v][k].x))
+									print('\t Depart from k = %d: %f' % (k, decvarhattprime[v][k].x))
 									
 	
 		# Capture all UAVs that land at a particular node
@@ -832,32 +851,30 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 			# These activities need to be sorted by time (ascending)
 			tmpTimes = []
 			
-			if (i == 0):
-				# Is there idle time before leaving the depot?			
-				if (abs(decvarhatt[i].x - prevTime[1]) > 0.001):
-					# The truck was delayed in departing this node.
+			if (i == 0 and REQUIRE_TRUCK_AT_DEPOT):
+				for v in launchesfrom[i]:
 					if (len(uavRiders) > 0):
 						A_statusID = STATIONARY_TRUCK_W_UAV
 					else:
 						A_statusID = STATIONARY_TRUCK_EMPTY
 					A_vehicleType = TYPE_TRUCK
-					A_startTime = 0.0
+					A_startTime = decvarhattprime[v][i].x - sL[v][i]
 					A_startNodeID = i
 					A_startLatDeg = node[i].latDeg
 					A_startLonDeg = node[i].lonDeg
 					A_startAltMeters = 0.0
-					A_endTime = decvarhatt[i].x
+					A_endTime = decvarhattprime[v][i].x
 					A_endNodeID = i
 					A_endLatDeg = node[i].latDeg
 					A_endLonDeg = node[i].lonDeg
 					A_endAltMeters = 0.0
 					A_icon = tmpIcon
-					A_description = 'Idle at depot for %3.0f seconds' % (A_endTime - A_startTime)
+					A_description = 'Launching UAV %d' % (v)
 					A_UAVsOnBoard = uavRiders
-					A_ganttStatus = GANTT_IDLE
+					A_ganttStatus = GANTT_LAUNCH
 			
 					tmpTimes.append([A_statusID, A_vehicleType, A_startTime, A_startNodeID, A_startLatDeg, A_startLonDeg, A_startAltMeters, A_endTime, A_endNodeID, A_endLatDeg, A_endLonDeg, A_endAltMeters, A_icon, A_description, A_UAVsOnBoard, A_ganttStatus])		
-	
+		
 
 			if (len(uavRiders) > 0):
 				A_statusID = TRAVEL_TRUCK_W_UAV
@@ -907,9 +924,9 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 				tmpTimes.append([A_statusID, A_vehicleType, A_startTime, A_startNodeID, A_startLatDeg, A_startLonDeg, A_startAltMeters, A_endTime, A_endNodeID, A_endLatDeg, A_endLonDeg, A_endAltMeters, A_icon, A_description, A_UAVsOnBoard, A_ganttStatus])		
 
 			if (j == c+1):
-				myMin, mySec	= divmod(decvarbart[j].x, 60)
+				myMin, mySec	= divmod(decvarhatt[j].x, 60)
 				myHour, myMin 	= divmod(myMin, 60)
-				A_description	= 'Arrived at the Depot.  Total Time = %d:%02d:%02d' % (myHour, myMin, mySec) 
+				A_description	= 'At the Depot.  Total Time = %d:%02d:%02d' % (myHour, myMin, mySec) 
 				A_endTime		= -1
 				A_ganttStatus	= GANTT_FINISHED
 			else:
@@ -924,7 +941,10 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 			else:
 				A_statusID = STATIONARY_TRUCK_EMPTY
 			A_vehicleType = TYPE_TRUCK
-			A_startTime = decvarbart[j].x - sigma[j]
+			if (j == c+1):
+				A_startTime = decvarhatt[j].x - sigma[j]
+			else:	
+				A_startTime = decvarbart[j].x - sigma[j]
 			A_startNodeID = j
 			A_startLatDeg = node[j].latDeg
 			A_startLonDeg = node[j].lonDeg
@@ -938,8 +958,8 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 	
 			tmpTimes.append([A_statusID, A_vehicleType, A_startTime, A_startNodeID, A_startLatDeg, A_startLonDeg, A_startAltMeters, A_endTime, A_endNodeID, A_endLatDeg, A_endLonDeg, A_endAltMeters, A_icon, A_description, A_UAVsOnBoard, A_ganttStatus])		
 	
-			if (j < c+1):
-				# We're going to ignore UAVs that land at the depot.
+			if (REQUIRE_TRUCK_AT_DEPOT and j <= c+1) or (not REQUIRE_TRUCK_AT_DEPOT and j < c+1):
+				# We're NOT going to ignore UAVs that land at the depot.
 				for v in landsat[j]:
 					if (len(uavRiders) > 0):
 						A_statusID = STATIONARY_TRUCK_W_UAV

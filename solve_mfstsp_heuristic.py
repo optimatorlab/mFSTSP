@@ -18,6 +18,7 @@ from mfstsp_heuristic_3_timing import *
 from local_search import *
 
 import endurance_calculator
+import distance_functions
 
 import random
 
@@ -29,6 +30,7 @@ TYPE_TRUCK 		= 1
 TYPE_UAV 		= 2
 #
 
+METERS_PER_MILE = 1609.34
 
 # http://stackoverflow.com/questions/635483/what-is-the-best-way-to-implement-nested-dictionaries-in-python
 def make_dict():
@@ -118,8 +120,8 @@ def generateTSPinfo(myTour, c, C, node, tau, sigma):
 		elif ((i == 0) and (j == c+1)):
 			description 	= 'Truck 1 was not used' 
 		else:
-			print 'WE HAVE A PROBLEM.  What is the proper description?'
-			print '\t Quitting Now.'
+			print('WE HAVE A PROBLEM.  What is the proper description?')
+			print('\t Quitting Now.')
 			exit()
 
 		if (0 in tmpAssignments[1][statusID]):
@@ -218,8 +220,8 @@ def insertTruckCustomer(myj, myi, myk, c, C, node, tau, sigma, x):
 			elif ((i == 0) and (j == c+1)):
 				description 	= 'Truck 1 was not used'
 			else:
-				print 'WE HAVE A PROBLEM.  What is the proper description?'
-				print '\t Quitting Now.'
+				print('WE HAVE A PROBLEM.  What is the proper description?')
+				print('\t Quitting Now.')
 				exit()
 
 			if (0 in tmpAssignments[1][statusID]):
@@ -266,10 +268,10 @@ def insertTruckCustomer(myj, myi, myk, c, C, node, tau, sigma, x):
 def ImproveMakeSpan(c, myTSPtour, y, waitingArray, customersTruck, customersUAV, V, sL, sR, tau, tauprime, sigma, sigmaprime, node, vehicle, eee, prevTSPtours):
 	
 	if (len(myTSPtour) != len(customersTruck) + 2):
-		print "len(TSP) = %d" % len(myTSPtour)
-		print "len(truck) = %d" % len(customersTruck)
-		print myTSPtour
-		print customersTruck
+		print("len(TSP) = %d" % len(myTSPtour))
+		print("len(truck) = %d" % len(customersTruck))
+		print(myTSPtour)
+		print(customersTruck)
 		exit()
 		
 		
@@ -522,7 +524,7 @@ def ImproveMakeSpan(c, myTSPtour, y, waitingArray, customersTruck, customersUAV,
 
 
 		
-def solve_mfstsp_heuristic(node, vehicle, travel, cutoffTime, problemName, problemType, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER):
+def solve_mfstsp_heuristic(node, vehicle, travel, cutoffTime, problemName, problemType, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, Etype, ITER):
 	
 	# Establish system parameters:
 	C 			= []
@@ -568,7 +570,7 @@ def solve_mfstsp_heuristic(node, vehicle, travel, cutoffTime, problemName, probl
 				elif (vehicle[vehicleID].vehicleType == TYPE_UAV):
 					tauprime[vehicleID][i][j] = travel[vehicleID][i][j].totalTime
 				else:
-					print "ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType)
+					print("ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType))
 					quit()	
 					
 			# NOTE: We need to capture the travel time to node c+1 (which is the same physical location as node 0):
@@ -580,7 +582,7 @@ def solve_mfstsp_heuristic(node, vehicle, travel, cutoffTime, problemName, probl
 			elif (vehicle[vehicleID].vehicleType == TYPE_UAV):
 				tauprime[vehicleID][i][c+1] = travel[vehicleID][i][0].totalTime
 			else:
-				print "ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType)
+				print("ERROR:  Vehicle Type %d is not defined." % (vehicle[vehicleID].vehicleType))
 				quit()	
 										
 										
@@ -595,18 +597,31 @@ def solve_mfstsp_heuristic(node, vehicle, travel, cutoffTime, problemName, probl
 
 							# Calculate the endurance for each sortie:
 							if (k == c+1):
-								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, 0)
+								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, 0, Etype)
 							else:	
-								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, k)
+								eee[v][i][j][k] = endurance_calculator.give_endurance(node, vehicle, travel, v, i, j, k, Etype)
 							eeePrime[v][i][k] = max(eeePrime[v][i][k], eee[v][i][j][k])		# This is only used in Phase 2
 
-							if (tauprime[v][i][j] + node[j].serviceTimeUAV + tauprime[v][j][k] <= eee[v][i][j][k]):
-								if (REQUIRE_TRUCK_AT_DEPOT):
-									if (tau[i][k] <= eee[v][i][j][k]):
-										P.append([v,i,j,k])									
-								else:	
-									if ((k == c+1) or (tau[i][k] <= eee[v][i][j][k])):
-										P.append([v,i,j,k])   # This relaxes the requirement that the truck picks up the UAV from the depot at the end.
+							# If endurance is based on distance, build the P set using distance limitations:
+							if Etype == 5:
+								DISTij = distance_functions.groundDistanceStraight(node[i].latDeg*(math.pi/180), node[i].lonDeg*(math.pi/180), node[j].latDeg*(math.pi/180), node[j].lonDeg*(math.pi/180))
+								DISTjk = distance_functions.groundDistanceStraight(node[j].latDeg*(math.pi/180), node[j].lonDeg*(math.pi/180), node[k].latDeg*(math.pi/180), node[k].lonDeg*(math.pi/180))
+
+								if vehicle[v].flightRange == 'low':
+									if DISTij + DISTjk <= 6*METERS_PER_MILE:
+										P.append([v,i,j,k])
+								elif vehicle[v].flightRange == 'high':
+									if DISTij + DISTjk <= 12*METERS_PER_MILE:
+										P.append([v,i,j,k])
+
+							else:
+								if (tauprime[v][i][j] + node[j].serviceTimeUAV + tauprime[v][j][k] <= eee[v][i][j][k]):
+									if (REQUIRE_TRUCK_AT_DEPOT):
+										if (tau[i][k] <= eee[v][i][j][k]):
+											P.append([v,i,j,k])									
+									else:	
+										if ((k == c+1) or (tau[i][k] <= eee[v][i][j][k])):
+											P.append([v,i,j,k])   # This relaxes the requirement that the truck picks up the UAV from the depot at the end.
 
 	# Build the launch service times:
 	for v in V:
@@ -646,172 +661,175 @@ def solve_mfstsp_heuristic(node, vehicle, travel, cutoffTime, problemName, probl
 
 	for LTL in range(LTLbase, c+1):
 
-		tryingP3improvement = False		# Initialize this flag
-	
-		requireUniqueTSP = True
+		for iterVal in range(0,ITER):
 
-		#-------------------------------------------------PHASE I STARTS HERE---------------------------------------------------------#
-
-		# Partition customers between truck and UAVs, and generate a unique truck tour:
-		[FEASobjVal, customersTruck, customersUAV, TSPobjVal, TSPassignments, TSPpackages, TSPtour, foundTSP, prevTSPtours, p1_previousTSP] = mfstsp_heuristic_1_partition(node, vehicle, travel, N, N_zero, N_plus, C, P, tau, tauprime, sigma, sigmaprime, sL, sR, LTL, requireUniqueTSP, prevTSPtours, bestOFV, p1_previousTSP, FEASobjVal)	
-
-
-		# If we cant find a unique TSP tour, go back to the start of Phase I with a new LTL:
-		if (not foundTSP):
-			continue
-
-		# Generate a lower bound:
-		optLowBnd = TSPobjVal
-		for j in customersUAV:
-			v = 2
-			optLowBnd += sL[v][j]
-			optLowBnd += sR[v][j]
+			tryingP3improvement = False		# Initialize this flag
 		
-		# If lower bound is greater than the current OFV, go back to the start of Phase I with a new LTL:	
-		if (optLowBnd >= bestOFV):
-			continue
-		
-		keepTrying2 = True
+			requireUniqueTSP = True
 
-		while (keepTrying2):
-			
-			keepTrying2 = False
+			#-------------------------------------------------PHASE I STARTS HERE---------------------------------------------------------#
 
-			#-------------------------------------------------PHASE II STARTS HERE---------------------------------------------------------#
-
-			# Create UAV sorties <v,i,j,k> (a pair of launch-recovery points and a UAV for each UAV customer)
-			[insertCost, x, y, z, insertTuple] = mfstsp_heuristic_2_asgn_uavs(node, eee, eeePrime, N_zero, N_plus, C, V, c, TSPassignments, customersUAV, customersTruck, sigma, sigmaprime, tau, tauprime, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, vehicle, sL, sR, prevTSPtours)
+			# Partition customers between truck and UAVs, and generate a unique truck tour:
+			[FEASobjVal, customersTruck, customersUAV, TSPobjVal, TSPassignments, TSPpackages, TSPtour, foundTSP, prevTSPtours, p1_previousTSP] = mfstsp_heuristic_1_partition(node, vehicle, travel, N, N_zero, N_plus, C, P, tau, tauprime, sigma, sigmaprime, sL, sR, LTL, requireUniqueTSP, prevTSPtours, bestOFV, p1_previousTSP, FEASobjVal)	
 
 
-			# Generate an optimistic lower bound assuming that truck never waits for UAVs:
+			# If we cant find a unique TSP tour, go back to the start of Phase I with a new LTL:
+			if (not foundTSP):
+				continue
+
+			# Generate a lower bound:
 			optLowBnd = TSPobjVal
-			optLowBnd += insertCost
-			for [v,i,j,k] in y:
-				if (i != 0):
-					optLowBnd += sL[v][i]
-				optLowBnd += sR[v][k]
+			for j in customersUAV:
+				v = 2
+				optLowBnd += sL[v][j]
+				optLowBnd += sR[v][j]
 			
+			# If lower bound is greater than the current OFV, go back to the start of Phase I with a new LTL:	
+			if (optLowBnd >= bestOFV):
+				continue
+			
+			keepTrying2 = True
 
-			# Check for lower bound:
-			if (optLowBnd > bestOFV):	# lower bound is greater than the current OFV, so go back to the start of Phase I with a new LTL
-				canDo3 = False
+			while (keepTrying2):
+				
 				keepTrying2 = False
 
-			else:	# lower bound is promising, check for Phase II feasibility
-				if (len(z) > 0):	# Phase II is not feasible, bceause customer z does not have a feasible assignment
+				#-------------------------------------------------PHASE II STARTS HERE---------------------------------------------------------#
+
+				# Create UAV sorties <v,i,j,k> (a pair of launch-recovery points and a UAV for each UAV customer)
+				[insertCost, x, y, z, insertTuple] = mfstsp_heuristic_2_asgn_uavs(node, eee, eeePrime, N_zero, N_plus, C, V, c, TSPassignments, customersUAV, customersTruck, sigma, sigmaprime, tau, tauprime, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, vehicle, sL, sR, prevTSPtours)
+
+
+				# Generate an optimistic lower bound assuming that truck never waits for UAVs:
+				optLowBnd = TSPobjVal
+				optLowBnd += insertCost
+				for [v,i,j,k] in y:
+					if (i != 0):
+						optLowBnd += sL[v][i]
+					optLowBnd += sR[v][k]
+				
+
+				# Check for lower bound:
+				if (optLowBnd > bestOFV):	# lower bound is greater than the current OFV, so go back to the start of Phase I with a new LTL
 					canDo3 = False
+					keepTrying2 = False
 
-					if (tryingP3improvement):
-						# After finding a feasible Phase III solution, we try to move a customer to a UAV in the improvement step.
-						# If this isn't immediately feasible, we'll stop trying, and go back to the start of Phase I with a new LTL.
-						keepTrying2 = False
-						tryingP3improvement = False
+				else:	# lower bound is promising, check for Phase II feasibility
+					if (len(z) > 0):	# Phase II is not feasible, bceause customer z does not have a feasible assignment
+						canDo3 = False
 
-					else:
-						# Let's try inserting a UAV customer with infeasible assignment in truck route:
-						customersTruck.append(z[0])
-						customersUAV.remove(z[0])
-
-						# The UAV customer with cheapest insertion cost is z[0], and corresponding insertion location information is stored in insertTuple.
-						# Use insertTuple to create a new TSP, and obtain corresponding TSP assignments as following:
-						[tmpTSPassignments, tmpTSPobjVal, tmpTSPtour] = insertTruckCustomer(insertTuple['j'], insertTuple['i'], insertTuple['k'], c, C, node, tau, sigma, x)
-
-						if (tmpTSPtour in prevTSPtours):
-							# We've already seen this.  No need to re-try
+						if (tryingP3improvement):
+							# After finding a feasible Phase III solution, we try to move a customer to a UAV in the improvement step.
+							# If this isn't immediately feasible, we'll stop trying, and go back to the start of Phase I with a new LTL.
 							keepTrying2 = False
+							tryingP3improvement = False
 
 						else:
-							keepTrying2 = True	
-							TSPassignments = tmpTSPassignments
-							TSPobjVal = tmpTSPobjVal
-							TSPtour = list(tmpTSPtour)
+							# Let's try inserting a UAV customer with infeasible assignment in truck route:
+							customersTruck.append(z[0])
+							customersUAV.remove(z[0])
+
+							# The UAV customer with cheapest insertion cost is z[0], and corresponding insertion location information is stored in insertTuple.
+							# Use insertTuple to create a new TSP, and obtain corresponding TSP assignments as following:
+							[tmpTSPassignments, tmpTSPobjVal, tmpTSPtour] = insertTruckCustomer(insertTuple['j'], insertTuple['i'], insertTuple['k'], c, C, node, tau, sigma, x)
+
+							if (tmpTSPtour in prevTSPtours):
+								# We've already seen this.  No need to re-try
+								keepTrying2 = False
+
+							else:
+								keepTrying2 = True	
+								TSPassignments = tmpTSPassignments
+								TSPobjVal = tmpTSPobjVal
+								TSPtour = list(tmpTSPtour)
+								prevTSPtours.append(TSPtour)
+
+					else:	# Phase II is feasible, and it seems worthwhile to try Phase III
+						canDo3 = True					
+
+
+				if (canDo3):
+					
+					#-------------------------------------------------PHASE III STARTS HERE---------------------------------------------------------#
+					
+					# Solve (P3) to determine the schedule of different activities:
+					[p3isFeasible, p3objVal, tmpAssignmentsArray, tmpPackagesArray, waitingTruck, waitingUAV, waitingArray, landsat, launchesfrom, ls_checkt, ls_hatt, ls_checktprime] = mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma, sigmaprime, tau, tauprime, minDistance, sR, sL, vehicle, travel, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, optLowBnd)
+
+
+					# Check Phase III feasibility:
+					if (p3isFeasible):
+
+						keepTrying2 = False														
+						
+						# Update the incumbent:
+						if (p3objVal < bestOFV):
+							
+							assignmentsArray = tmpAssignmentsArray
+							packagesArray = tmpPackagesArray
+							objVal = p3objVal
+
+							bestWaitingTruck = waitingTruck
+							bestWaitingUAV = waitingUAV
+							
+							bestOFV = p3objVal
+
+
+						# Improvement Step: (to try to reduce the makespan by moving a truck customer to a UAV)
+						[bestSavings, bestAction, tmpTSPtour, tmpCustomersTruck, tmpCustomersUAV] = ImproveMakeSpan(c, TSPtour, y, waitingArray, customersTruck, customersUAV, V, sL, sR, tau, tauprime, sigma, sigmaprime, node, vehicle, eee, prevTSPtours)
+						tryingP3improvement = False
+
+						if (bestSavings > 0):	# If saving is possible, make the move and go back to Phase II
+							keepTrying2 = True
+							tryingP3improvement = True
+							
+							customersTruck = list(tmpCustomersTruck)
+							customersUAV = list(tmpCustomersUAV)
+
+							# Create TSP assignments using the new TSP tour:
+							[TSPobjVal, TSPassignments, TSPtour] = generateTSPinfo(tmpTSPtour, c, C, node, tau, sigma)
 							prevTSPtours.append(TSPtour)
 
-				else:	# Phase II is feasible, and it seems worthwhile to try Phase III
-					canDo3 = True					
 
+						else:	# Perform local search (try shifting retrieval points for UAVs to the next location, if the truck waits at the current retrieval location)
+							while (True):
+								[shift_happened, tmp_y] = local_search(x, y, c, waitingArray, landsat, launchesfrom, ls_checktprime, eee, tau, tauprime, sigma, sigmaprime, ls_checkt, ls_hatt, V, sL, sR)
 
-			if (canDo3):
-				
-				#-------------------------------------------------PHASE III STARTS HERE---------------------------------------------------------#
-				
-				# Solve (P3) to determine the schedule of different activities:
-				[p3isFeasible, p3objVal, tmpAssignmentsArray, tmpPackagesArray, waitingTruck, waitingUAV, waitingArray, landsat, launchesfrom, ls_checkt, ls_hatt, ls_checktprime] = mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma, sigmaprime, tau, tauprime, minDistance, sR, sL, vehicle, travel, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, optLowBnd)
+								if shift_happened == True: # Shift is possible. Therefore re-solve (P3) after making those shifts, and obtain new solution
+									[p3isFeasible, p3objVal, tmpAssignmentsArray, tmpPackagesArray, waitingTruck, waitingUAV, waitingArray, landsat, launchesfrom, ls_checkt, ls_hatt, ls_checktprime] = mfstsp_heuristic_3_timing(x, tmp_y, z, node, eee, N, P, V, cutoffTime, c, sigma, sigmaprime, tau, tauprime, minDistance, sR, sL, vehicle, travel, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, optLowBnd)
 
+									# Check Phase III feasibility:
+									if (p3isFeasible):	# Phase III is feasible. Update the incumbent, and go back to local search
 
-				# Check Phase III feasibility:
-				if (p3isFeasible):
+										y = []
+										for [v,i,j,k] in tmp_y:
+											y.append([v,i,j,k])
 
-					keepTrying2 = False														
-					
-					# Update the incumbent:
-					if (p3objVal < bestOFV):
-						
-						assignmentsArray = tmpAssignmentsArray
-						packagesArray = tmpPackagesArray
-						objVal = p3objVal
+										keepTrying2 = False														
+										
+										# Update the incumbent:
+										if (p3objVal < bestOFV):
+											
+											assignmentsArray = tmpAssignmentsArray
+											packagesArray = tmpPackagesArray
+											objVal = p3objVal
 
-						bestWaitingTruck = waitingTruck
-						bestWaitingUAV = waitingUAV
-						
-						bestOFV = p3objVal
+											bestWaitingTruck = waitingTruck
+											bestWaitingUAV = waitingUAV
+											
+											bestOFV = p3objVal
 
-
-					# Improvement Step: (to try to reduce the makespan by moving a truck customer to a UAV)
-					[bestSavings, bestAction, tmpTSPtour, tmpCustomersTruck, tmpCustomersUAV] = ImproveMakeSpan(c, TSPtour, y, waitingArray, customersTruck, customersUAV, V, sL, sR, tau, tauprime, sigma, sigmaprime, node, vehicle, eee, prevTSPtours)
-					tryingP3improvement = False
-
-					if (bestSavings > 0):	# If saving is possible, make the move and go back to Phase II
-						keepTrying2 = True
-						tryingP3improvement = True
-						
-						customersTruck = list(tmpCustomersTruck)
-						customersUAV = list(tmpCustomersUAV)
-
-						# Create TSP assignments using the new TSP tour:
-						[TSPobjVal, TSPassignments, TSPtour] = generateTSPinfo(tmpTSPtour, c, C, node, tau, sigma)
-						prevTSPtours.append(TSPtour)
-
-
-					else:	# Perform local search (try shifting retrieval points for UAVs to the next location, if the truck waits at the current retrieval location)
-						while (True):
-							[shift_happened, tmp_y] = local_search(x, y, c, waitingArray, landsat, launchesfrom, ls_checktprime, eee, tau, tauprime, sigma, sigmaprime, ls_checkt, ls_hatt, V, sL, sR)
-
-							if shift_happened == True: # Shift is possible. Therefore re-solve (P3) after making those shifts, and obtain new solution
-								[p3isFeasible, p3objVal, tmpAssignmentsArray, tmpPackagesArray, waitingTruck, waitingUAV, waitingArray, landsat, launchesfrom, ls_checkt, ls_hatt, ls_checktprime] = mfstsp_heuristic_3_timing(x, tmp_y, z, node, eee, N, P, V, cutoffTime, c, sigma, sigmaprime, tau, tauprime, minDistance, sR, sL, vehicle, travel, REQUIRE_TRUCK_AT_DEPOT, REQUIRE_DRIVER, optLowBnd)
-
-								# Check Phase III feasibility:
-								if (p3isFeasible):	# Phase III is feasible. Update the incumbent, and go back to local search
-
-									y = []
-									for [v,i,j,k] in tmp_y:
-										y.append([v,i,j,k])
-
-									keepTrying2 = False														
+									else:	# Phase III is infeasible. Go back to the start of Phase I with a new LTL.
+										break
 									
-									# Update the incumbent:
-									if (p3objVal < bestOFV):
-										
-										assignmentsArray = tmpAssignmentsArray
-										packagesArray = tmpPackagesArray
-										objVal = p3objVal
-
-										bestWaitingTruck = waitingTruck
-										bestWaitingUAV = waitingUAV
-										
-										bestOFV = p3objVal
-
-								else:	# Phase III is infeasible. Go back to the start of Phase I with a new LTL.
+								else:	# Shift is not possible. Go back to the start of Phase I with a new LTL.
 									break
-								
-							else:	# Shift is not possible. Go back to the start of Phase I with a new LTL.
-								break
 
-				else:
-					# Phase III is infeasible. Go back to the start of Phase I with a new LTL.
-					keepTrying2 = False
-			# End Phase III loop
-		# End keep trying Phase II loop
+					else:
+						# Phase III is infeasible. Go back to the start of Phase I with a new LTL.
+						keepTrying2 = False
+				# End Phase III loop
+			# End keep trying Phase II loop
+		# End ITER loop
 	# End LTL loop
 	
 	# Convert best solution to "assignments" and "packages" classes

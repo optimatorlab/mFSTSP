@@ -218,10 +218,9 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 		for v1 in zzz:
 			for v2 in zzz:
 				if (v1 != v2):
-					if ((v2 == 0) and (k == c+1 or k == 0)):
-						print "skip"
-					else:	
+					if not ((v2 == 0) and (k == c+1 or k == 0)):
 						decvarzr[v1][v2][k] = m.addVar(lb = 0, ub = 1, obj = 0, vtype=myVtype, name="zr.%d.%d.%d" % (v1,v2,k))
+						
 
 	for i in N_zero:
 		if (REQUIRE_DRIVER):
@@ -231,10 +230,9 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 		for v1 in zzz:
 			for v2 in zzz:
 				if (v1 != v2):
-					if (v2 == 0 and (i == c+1 or i == 0)):
-						print "skip"
-					else:
+					if not (v2 == 0 and (i == c+1 or i == 0)):
 						decvarzl[v1][v2][i] = m.addVar(lb = 0, ub = 1, obj = 0, vtype=myVtype, name="zl.%d.%d.%d" % (v1,v2,i))
+
 					
 	for i in N_plus:
 		if (i != 0):
@@ -323,8 +321,14 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 		# Constraint (70):	
 		m.addConstr(decvarchecktprime[v][j] >= decvarhattprime[v][i] + tauprime[v][i][j]*(1-decvarzhat[j]), "Constr.70.%d.%d.%d" % (v,j,i))
 
+		# Constraint (70b):
+		m.addConstr(decvarchecktprime[v][j] <= decvarhattprime[v][i] + tauprime[v][i][j] + M*(decvarzhat[j]), "Constr.70b.%d.%d.%d" % (v,j,i))
+
 		# Constraint (71):
 		m.addConstr(decvarhattprime[v][j] >= decvarchecktprime[v][j] + sigmaprime[j]*(1-decvarzhat[j]), "Constr.71.%d.%d" % (v,j))
+
+		# Constraint (71b):
+		m.addConstr(decvarhattprime[v][j] <= decvarchecktprime[v][j] + sigmaprime[j] + M*(decvarzhat[j]), "Constr.71b.%d.%d" % (v,j))
 
 		# Constraint (77):	
 		m.addConstr(decvarchecktprime[v][k] - sR[v][k] - decvarhattprime[v][i] <= eee[v][i][j][k], "Constr.77.%d.%d.%d" % (v,i,k))	
@@ -470,7 +474,7 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 	# Need to build the TSP solution in order
 	if (m.Status == GRB.INFEASIBLE):
 		# NO FEASIBLE SOLUTION
-		print "P3 IS INFEASIBLE"
+		# print("P3 IS INFEASIBLE")
 
 		assignmentsArray 	= []
 		packagesArray 		= []
@@ -482,7 +486,7 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 
 	elif ((m.Status == GRB.TIME_LIMIT) and (m.objVal > 1e30)):
 		# NO FEASIBLE SOLUTION WAS FOUND (maybe one exists, but we ran out of time)
-		print "P3 Time Limit Reached"
+		# print("P3 Time Limit Reached")
 		
 		p3isFeasible 			= False
 		p3OFV 					= -1
@@ -494,7 +498,7 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 
 	elif (m.Status == GRB.CUTOFF):
 		# Lower bound is greater than current incumbent.
-		print "P3 Objective bound is worse than CutOff"
+		# print("P3 Objective bound is worse than CutOff")
 		
 		p3isFeasible 			= False
 		p3OFV 					= -1
@@ -510,13 +514,13 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 		for [v,i,j,k] in y:
 			if (decvarzhat[j].x > 0.9):
 				# No feasible solution, since customer j has infeasible UAV assignment
-				print 'zhat[%d] = 1.0' % (j)
+				# print('zhat[%d] = 1.0' % (j))
 				p3isFeasible 			= False
 				break										
 		
 				
 		if (p3isFeasible == False):
-			print "P3 IS INFEASIBLE"
+			# print("P3 IS INFEASIBLE")
 			
 			p3isFeasible 			= False
 			p3OFV 					= -1
@@ -529,7 +533,7 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 
 		else:
 			# A feasible solution is FOUND
-			print '\nOBJECTIVE FUNCTION VALUE:', m.objVal
+			# print('\nOBJECTIVE FUNCTION VALUE: %f' % m.objVal)
 	
 			p3isFeasible 			= True
 			p3OFV 					= m.objVal
@@ -583,35 +587,30 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 				# These activities need to be sorted by time (ascending)
 				tmpTimes = []
 							
-				if (i == 0):
-					# Is there idle time before leaving the depot?			
-					if (abs(decvarhatt[i].x - prevTime[1]) > 0.001):
-
-						# The truck was delayed in departing this node.
-						waitingArray[0] = abs(decvarhatt[i].x - prevTime[1])
-						
+				if (i == 0 and REQUIRE_TRUCK_AT_DEPOT):
+					for v in launchesfrom[i]:
 						if (len(uavRiders) > 0):
 							A_statusID = STATIONARY_TRUCK_W_UAV
 						else:
 							A_statusID = STATIONARY_TRUCK_EMPTY
 						A_vehicleType = TYPE_TRUCK
-						A_startTime = 0.0
+						A_startTime = decvarhattprime[v][i].x - sL[v][i]
 						A_startNodeID = i
 						A_startLatDeg = node[i].latDeg
 						A_startLonDeg = node[i].lonDeg
 						A_startAltMeters = 0.0
-						A_endTime = decvarhatt[i].x
+						A_endTime = decvarhattprime[v][i].x
 						A_endNodeID = i
 						A_endLatDeg = node[i].latDeg
 						A_endLonDeg = node[i].lonDeg
 						A_endAltMeters = 0.0
 						A_icon = tmpIcon
-						A_description = 'Idle at depot for %3.0f seconds' % (A_endTime - A_startTime)
+						A_description = 'Launching UAV %d' % (v)
 						A_UAVsOnBoard = uavRiders
-						A_ganttStatus = GANTT_IDLE
+						A_ganttStatus = GANTT_LAUNCH
 				
 						tmpTimes.append([A_statusID, A_vehicleType, A_startTime, A_startNodeID, A_startLatDeg, A_startLonDeg, A_startAltMeters, A_endTime, A_endNodeID, A_endLatDeg, A_endLonDeg, A_endAltMeters, A_icon, A_description, A_UAVsOnBoard, A_ganttStatus])		
-		
+	
 
 				if (len(uavRiders) > 0):
 					A_statusID = TRAVEL_TRUCK_W_UAV
@@ -662,9 +661,9 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 					
 
 				if (j == c+1):
-					myMin, mySec	= divmod(decvarbart[j].x, 60)
+					myMin, mySec	= divmod(decvarhatt[j].x, 60)
 					myHour, myMin 	= divmod(myMin, 60)
-					A_description	= 'Arrived at the Depot.  Total Time = %d:%02d:%02d' % (myHour, myMin, mySec) 
+					A_description	= 'At the Depot.  Total Time = %d:%02d:%02d' % (myHour, myMin, mySec) 
 					A_endTime		= -1
 					A_ganttStatus	= GANTT_FINISHED
 				else:
@@ -679,7 +678,10 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 				else:
 					A_statusID = STATIONARY_TRUCK_EMPTY
 				A_vehicleType = TYPE_TRUCK
-				A_startTime = decvarbart[j].x - sigma[j]
+				if (j == c+1):
+					A_startTime = decvarhatt[j].x - sigma[j]
+				else:	
+					A_startTime = decvarbart[j].x - sigma[j]
 				A_startNodeID = j
 				A_startLatDeg = node[j].latDeg
 				A_startLonDeg = node[j].lonDeg
@@ -693,8 +695,8 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 		
 				tmpTimes.append([A_statusID, A_vehicleType, A_startTime, A_startNodeID, A_startLatDeg, A_startLonDeg, A_startAltMeters, A_endTime, A_endNodeID, A_endLatDeg, A_endLonDeg, A_endAltMeters, A_icon, A_description, A_UAVsOnBoard, A_ganttStatus])		
 		
-				if (j < c+1):
-					# We're going to ignore UAVs that land at the depot.
+				if (REQUIRE_TRUCK_AT_DEPOT and j <= c+1) or (not REQUIRE_TRUCK_AT_DEPOT and j < c+1):
+					# We're NOT going to ignore UAVs that land at the depot.
 					for v in landsat[j]:
 						if (len(uavRiders) > 0):
 							A_statusID = STATIONARY_TRUCK_W_UAV

@@ -46,5 +46,4 @@ def dfs(V, delta):
 
 		DFS_VISIT(u)
 
-	print "The graph has %d component(s)." % len(component)
 	return component

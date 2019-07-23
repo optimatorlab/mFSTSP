@@ -133,8 +133,8 @@ def generateTSPinfo(myTour, c, C, node, tau, sigma):
 		elif ((i == 0) and (j == c+1)):
 			description 	= 'Truck 1 was not used' 
 		else:
-			print 'WE HAVE A PROBLEM.  What is the proper description?'
-			print '\t Quitting Now.'
+			print('WE HAVE A PROBLEM.  What is the proper description?')
+			print('\t Quitting Now.')
 			exit()
 
 		if (0 in tmpAssignments[1][statusID]):
@@ -217,8 +217,8 @@ def make_TSP_package(myTour, c, C, node, tau, sigma):
 		elif ((i == 0) and (j == c+1)):
 			description 	= 'Truck 1 was not used'
 		else:
-			print 'WE HAVE A PROBLEM.  What is the proper description?'
-			print '\t Quitting Now.'
+			print('WE HAVE A PROBLEM.  What is the proper description?')
+			print('\t Quitting Now.')
 			exit()
 
 		if (0 in assignments[1][statusID]):
@@ -314,7 +314,7 @@ def getTruckMoves(V, C, TSPtour, tau, sigma, sL, sR):
 				k = TSPtour[iii+1]
 				tmpSavings = (sL[v][j] + sR[v][j]) - (tau[i][j] + tau[j][k] + sigma[j] - tau[i][k])
 				if (tmpSavings > 0):	
-					print "Cheaper to serve %d via truck (save %f)" % (j, tmpSavings)
+					# print("Cheaper to serve %d via truck (save %f)" % (j, tmpSavings))
 					if (j not in moreTruck):
 						moreTruck.append(j)
 						moreTruckSavings.append(tmpSavings)
@@ -335,7 +335,7 @@ def getUAVmoves(TSPtour, xxxTruckOnly, sL, sR, tau, sigma, V, Pprime):
 			if ([i,k] in Pprime[v][j]):
 				tmpSavings = (sigma[j] + tau[i][j] + tau[j][k]) - (sL[v][j] + sR[v][j] + tau[i][k]) 
 				if (tmpSavings > 0):
-					print "Cheaper to serve %d via UAV (save %f)" % (j, tmpSavings)
+					# print("Cheaper to serve %d via UAV (save %f)" % (j, tmpSavings))
 					if (j not in moreUAV):
 						moreUAV.append(j)
 						moreUAVsavings.append(tmpSavings)
@@ -421,8 +421,8 @@ def mfstsp_heuristic_1_partition(node, vehicle, travel, N, N_zero, N_plus, C, P,
 				if (totalCost < bestCost):
 					bestCost = totalCost
 					currentTSP = list(TSPtour)
-			else:
-				print "Not cheaper to move anyone to truck"
+			# else:
+				# print("Not cheaper to move anyone to truck")
 			
 			# Any candidates for moving back to drone?
 			[moreUAV, moreUAVsavings] = getUAVmoves(TSPtour, xxxTruckOnly, sL, sR, tau, sigma, V, Pprime)
@@ -441,8 +441,8 @@ def mfstsp_heuristic_1_partition(node, vehicle, travel, N, N_zero, N_plus, C, P,
 				if (totalCost < bestCost):
 					bestCost = totalCost
 					currentTSP = list(TSPtour)
-			else:
-				print "Not cheaper to move anyone to UAV"
+			# else:
+				# print("Not cheaper to move anyone to UAV")
 
 	else:	# The initial tour building process was already performed in the first LTL loop. Therefore, just copy that tour here.
 		currentTSP = list(p1_previousTSP)

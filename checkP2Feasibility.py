@@ -33,6 +33,9 @@ def checkP2Feasibility(UAVPossibleCust, TSP, V, Pprime):
 
 		m = Model("Check_Feas")
 
+		# Tell Gurobi not to print to a log file
+		m.params.OutputFlag = 0
+
 		x = {} #DecVar
 
 		for i in launch_uav_cust:
@@ -58,7 +61,7 @@ def checkP2Feasibility(UAVPossibleCust, TSP, V, Pprime):
 		if (m.Status == GRB.INFEASIBLE):
 			myStatus = 0
 
-			print 'The model is infeasible; computing IIS'
+			# print('The model is infeasible; computing IIS')
 			m.computeIIS()
 
 			for q in m.getConstrs():
@@ -67,7 +70,6 @@ def checkP2Feasibility(UAVPossibleCust, TSP, V, Pprime):
 					if (tmp[1] == '2'):
 						j = int(tmp[3])
 						infeasibleUAVcust.append(j)
-						print "INFEASIBLE UAV CUSTOMERS:", infeasibleUAVcust
 
 		else:
 			myStatus = 1
