@@ -47,6 +47,13 @@ sudo pip install geopy
     
 3) The problems folder also contains four CSV files, that have the information on UAV specifications. Depending on the CSV file we choose (between 101, 102, 103, and 104) to solve a problem instance, we select a set of UAVs with particular speed and range. The appropriate CSV file can be chosen through the command line argument, which is described in **RUNNING THE SCRIPT** section.
 
+    * 101: High speed, low range
+    * 102: High speed, high range
+    * 103: Low speed, low range
+    * 104: Low speed, high range
+
+4) The package contains a file called 'InstanceInfo.csv' which has the following information: For each problem instance, the number of customers nodes in it, and whether that instance is of Buffalo or Seattle.
+
 
 ### RUNNING THE SCRIPT:
 
@@ -109,3 +116,21 @@ Once the code has run, it outputs the following:
 1) It adds a row in the 'performance_summary.csv' file. This row has information on quantities such as total run time, objective function value, number of customers assigned to truck, number of customers assigned to UAVs, etc.
 
 2) It also adds an assignment table in the 'tbl_solutions_vehicleFileID_numUAVs_problemType.csv' file, which is inside the subfolder (e.g. 20170608T121632668184) of the problem instance. The assignment table consists of travel and service times of different vehicles, the types of activities that they are performing, as well as their timelines. This is the schedule that will be followed by the truck-UAV system for those set of customers.
+
+
+### ARCHIVED PROBLEM SOLUTIONS:
+
+The package also contains the solution of the problem instances, which is used in the analysis section of the paper. A file called 'performance_summary_archive.csv' contains the summary of these already-solved problem instances (with different parameter settings). Specifically, it has the solution of following instances:
+
+1. Each 8-customer problem instance (20, total) is run using four different settings of vehicleFileID, and {1,2,3,4} number of UAVs, using both the IP and the Heuristic, resulting in a total of 640 problem solutions.
+    
+2. Each of the 10-, 25-, 50-, and 100-customer problem instances (80, total) is run using four different settings of vehicleFileID, and {1,2,3,4} number of UAVs, using just the Heuristic, resulting in a total of 1280 problem solutions.
+    
+The complete parameter (e.g. cutoffTime, ITER, Etype, etc.) specifications for each problem solution can be found in 'performance_summary_archive.csv'. The assignment table corresponding to each of these solutions also exists in the 'tbl_solutions_vehicleFileID_numUAVs_problemType.csv' file, which is inside the subfolder (e.g. 20170608T121632668184) of the problem instance. When a problem is ran again using the same settings (e.g. same vehicleFileID, numUAVs and problemType), it just appends another assignment table in the same csv file.
+
+
+&nbsp;
+
+### Contact Info:
+
+For any queries, please send an email to r28@buffalo.edu.
