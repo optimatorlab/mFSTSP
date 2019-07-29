@@ -1,61 +1,107 @@
-# Source codes for mFSTSP IP and Heuristic
+# The Multiple Flying Sidekick Traveling Salesman Problem (mFSTSP)
 
-Runs on **Windows / Linux / Mac**.
+This repository provides a collection of mFSTSP test problems, as well as the source code to solve mFSTSP instances. The mFSTSP is a variant of the classical TSP, in which one or more UAVs coordinate with a truck to deliver parcels in the minimum possible time. The code provided here consists of both the mixed integer linear programming (MILP) implementation and a heuristic to solve larger problems. 
 
-Compatible with both **Python 2** and **Python 3**.
+The repository accompanies the following paper, which is currently under a second round of reviews:
+>>> C. Murray and R. Raj, The Multiple Flying Sidekicks Traveling Salesman Problem: Parcel Delivery with Multiple Drones (July 27, 2019). Available at SSRN: https://ssrn.com/abstract=3338436 or http://dx.doi.org/10.2139/ssrn.3338436
 
-Requires **Gurobi**.
-
-### LINK TO THE PAPER ON multiple flying sidekick traveling salesman problem (mFSTSP):
-
-https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3338436
+The paper provides details on the mFSTSP definition, the corresponding MILP formulation, and the heuristic.
 
 
-### DESCRIPTION:
+## mFSTSP Repository Contents
+This repository contains the following materials:
 
-This repository provides source codes to run the mFSTSP. The mFSTSP is a variant of the classical TSP, in which one or many UAVs coordinate with a truck to deliver parcels in the minimum possible time. The codes provided here consist of both the integer programming (IP) implementation, and the heuristic algorithm (to solve larger problems). To run this package, it is necessary to have the python modules outlined below. The details on how to run this script (and the options available) is provided below.
+1. A collection of **test problems (and solutions)** that were used in the analysis described in the [mFSTSP paper](https://ssrn.com/abstract=3338436).
 
-
-### INSTALLING ADDITIONAL PYTHON MODULES (only for Linux. For Windows/Mac, use the command line arguments accordingly):
-
-1) pandas:
-```
-sudo pip install pandas
-```
-
-2) scipy:
-```
-sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas
-```
-
-3) geopy
-```
-sudo pip install geopy
-```
-
-### CONTENTS OF THIS PACKAGE:
-
-1) It contains a main python script called 'main.py' which calls all other python scripts in this package to solve the mFSTSP.
-
-2) It contains a 'Problems' folder, that has 100 subfolders in it. Each subfolder corresponds to a different problem instance.
-
-    i. In each subfolder, you will find a file called 'tbl_locations.csv' which has the lat-lon information of the depot and all the customer nodes.
-    
-    ii. Each subfolder also contains a file called 'tbl_truck_data_PG.csv' which has the travel time information from each node to all the other nodes.
-    
+   1. [`InstanceInfo.csv`](InstanceInfo.csv) contains a summary of all 100 "base" test problems, including the number of customers, geographic region (Buffalo, NY or Seattle, WA), and the number of customers within 5 or 10 miles of the depot.  This file may be useful if you are looking for problems with certain properties (e.g., 50-customer problems, or problems in Seattle). 
+   
+   2. [`performance_summary_archive.csv`](performance_summary_archive.csv) provides information about solutions generated for each test problem.  This file contains the following columns:
+      - `problemName` - The name of the problem instance (written in the form of a timestamp).  This is a subdirectory name within the [`Problems`](Problems) directory.
+      - `vehicleFileID` - Indicates the speed and range of the UAVs.  See the note below, which describes the definitions of `101`, `102`, `103`, and `104`.
+      - `cutoffTime` - The maximum allowable runtime, in [seconds].  If the problem was solved via heuristic, this time represents the maximum runtime of Phase 3.
+      - `problemType` - Indicates if the problem was solved via MILP (`1`) or heuristic (`2`).
+      - `problemTypeString` - A text string describing the solution approach (`mFSTSP IP` or `mFSTSP Heuristic`).
+      - `numUAVs` - # of UAVs available (`1`, `2`, `3`, or `4`).
+      - `numTrucks` - This can be ignored; it will always have a value of `-1`.  However, in each problem there is actually exactly 1 truck.
+      - `requireTruckAtDepot` - A boolean value to indicate whether the truck is required to be at the depot when UAVs are launched from the depot.  This problem "variant" is described in Section 3 of the [mFSTSP paper](https://ssrn.com/abstract=3338436).
+      - `requireDriver` - A boolean value to indicate if the driver is required to be present when UAVs are launched/retrieved by the truck at customer locations.  This problem "variant" is described in Section 3 of the [mFSTSP paper](https://ssrn.com/abstract=3338436).
+      - `Etype` - Indicates the endurance model that was employed.  Options include: `1` (nonlinear), `2` (linear), `3` (fixed/constant time), `4` (unlimited), and `5` (fixed/constant distance).  Details on these models are found in Section 4 of the [mFSTSP paper](https://ssrn.com/abstract=3338436). 
+      - `ITER` - Indicates the number of iterations to be run for each value of "LTL".  If `problemType == 1` (MILP), `ITER` will be -1 (not applicable).  Otherwise, `ITER` will be `1` for the heuristic.  NOTE: This feature is not described/implemented in the [mFSTSP paper](https://ssrn.com/abstract=3338436).
+      - `runString` - This contains the command-line arguments used to solve the problem.  It is included here to allow copy/pasting.
+      - `numCustomers` - The total number of customers.
+      - `timestamp` - The time at which the problem was solved.
+      - `ofv` - The objective function value, as obtained by the given solution approach.
+      - `bestBound` - If `problemType == 1` (MILP), this is the best bound provided by Gurobi.  Otherwise, `bestBound = -1` for the heuristic (as no bounds are available).
+      - `totalTime` - The total runtime of the MILP or heuristic.
+      - `isOptimal` - A boolean value to indicate if the solution was provably optimal.  This only applies if `problemType == 1` (MILP); there is no proof of optimality for the heuristic.
+      - `numUAVcust` - The number of customers assigned to the UAV(s).
+      - `numTruckCust` - The number of customers assigned to the truck.
+      - `waitingTruck` - The amount of time, in [seconds], that the truck spends waiting on UAVs.
+      - `waitingUAV` - The amount of time, in [seconds], that the UAVs spend waiting on the truck.
+      
+      **NOTE:** [`performance_summary.csv`](performance_summary.csv) is an empty/placeholder file.  It will be populated only if/when you run the solver code.  This file currently exists solely to initialize the column headings.
+       
+   3. The `Problems` directory contains 100 sub-directories (one for each "base" problem).
+        - In each subdirectory, you will find a file called `tbl_locations.csv` which has the lat/lon information of the depot and all the customer nodes.
+        - Each subdirectory also contains a file called `tbl_truck_data_PG.csv` which has the travel time information from each node to all the other nodes.
     It is necessary to have these two files in the subfolder corresponding to a problem instance, in order to solve the mFSTSP for that instance.
-    
-3) The problems folder also contains four CSV files, that have the information on UAV specifications. Depending on the CSV file we choose (between 101, 102, 103, and 104) to solve a problem instance, we select a set of UAVs with particular speed and range. The appropriate CSV file can be chosen through the command line argument, which is described in **RUNNING THE SCRIPT** section.
 
-    * 101: High speed, low range
-    * 102: High speed, high range
-    * 103: Low speed, low range
-    * 104: Low speed, high range
+   4. The `Problems` directory also contains four CSV files, that have the information on UAV specifications. Depending on the CSV file we choose (between 101, 102, 103, and 104) to solve a problem instance, we select a set of UAVs with particular speed and range. The appropriate CSV file can be chosen through the command line argument, which is described in **RUNNING THE SCRIPT** section.
+        - 101: High speed, low range
+        - 102: High speed, high range
+        - 103: Low speed, low range
+        - 104: Low speed, high range
 
-4) The package contains a file called 'InstanceInfo.csv' which has the following information: For each problem instance, the number of customers nodes in it, and whether that instance is of Buffalo or Seattle.
+3. A main python script called 'main.py' which calls all other python scripts in this package to solve the mFSTSP.
+
+
+
+## Installation and Setup
+
+
+### Compatability
+
+- The mFSTSP source code is compatible with both **Python 2** and **Python 3**.
+- It has been tested on **Windows**, **Linux**, and **Mac**.
+
+### Prerequisites
+- Both the MILP and the hueristic require [Gurobi](http://gurobi.com).
+
+
+#### Additional Required Python Modules
+To run this package, it is necessary to have the python modules outlined below. 
+The following terminal commands are applicable to Linux and Mac only.  Windows users will need to install these packages in a different manner.  **HOW???**
+
+1. pandas:
+   ```
+   pip install pandas
+   ```
+   *If you receive errors related to "access denied", try running `sudo pip install pandas`.*
+   
+2. geopy:
+   ```
+   sudo pip install geopy
+   ```
+   *If you receive errors related to "access denied", try running `sudo pip install geopy`.*
+
+3. scipy:
+   ```
+   sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas
+   ```
+
+
+
+
+
+
+
+
+
+
 
 
 ### RUNNING THE SCRIPT:
+The details on how to run this script (and the options available) is provided below.
 
 1. Download all files and folders of this package at the same location (inside a folder) in your computer. Name that folder 'mFSTSP'.
 
