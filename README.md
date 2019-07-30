@@ -39,9 +39,9 @@ This repository contains **test problems**, **solutions**, and the **source code
       - ID [`103`](Problems/tbl_vehicles_103.csv): Low speed, low range; and
       - ID [`104`](Problems/tbl_vehicles_104.csv): Low speed, high range.
       
-      Each test problem can be solved with any of these UAV specifications by specifying the appropriate command-line argument.  This is described in the "[Run the Solvers](#Run-the-Solvers)" section below. 
+      Each test problem can be solved with any of these UAV specifications by specifying the appropriate command-line argument.  This is described in the "[Running the Solvers](#Running-the-Solvers)" section below. 
 
-2. Although there are numerous Python scripts in this repository, [`main.py`](main.py) is the only one you will directly interact with.  This script makes use of the other Python scripts.  See "[Run the Solvers](#Run-the-Solvers)" below for instructions on generating solutions.
+2. Although there are numerous Python scripts in this repository, [`main.py`](main.py) is the only one you will directly interact with.  This script makes use of the other Python scripts.  See "[Running the Solvers](#Running-the-Solvers)" below for instructions on generating solutions.
 
 
 ## Installation and Setup
