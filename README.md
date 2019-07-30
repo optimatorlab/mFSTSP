@@ -19,7 +19,7 @@ This repository contains **test problems**, **solutions**, and the **source code
  
       - **NOTE:** [`performance_summary.csv`](performance_summary.csv) is an empty/placeholder file.  It will be populated only if/when you run the solver code.  This file currently exists solely to initialize the column headings.
        
-   3. The `Problems` directory contains 100 sub-directories (one for each "base" problem).  Each sub-directory contains the following groups of files:
+   3. The [`Problems`](Problems) directory contains 100 sub-directories (one for each "base" problem).  Each sub-directory contains the following groups of files:
       - There are 2 files that are required by the solver.  These 2 files must be present in order to run the solver, as they are **inputs** to either the MILP model or the heuristic:
          - `tbl_locations.csv` describes all nodes in the problem.  `nodeType 0` represents the depot, `nodeType 1` represents a customer.  The depot is always always assigned to `nodeID 0`.  Each node has a corresponding latitude and longitude (specified in degrees).  The altitude is always 0.  Customer nodes have a corresponding non-zero parcel weight (in [pounds]).  There is no parcel associated with the depot. 
          - `tbl_truck_travel_data_PG.csv` contains the directed truck travel time and distance information from one node to another.  All time and distance values were obtained by pgRouting, using OpenStreetMaps data.
@@ -58,7 +58,7 @@ It has been tested on **Windows**, **Linux**, and **Mac**.
 
 #### Additional Required Python Modules
 To run this package, it is necessary to have the Python modules outlined below. 
-The following terminal commands are applicable to Linux and Mac only.  Windows users will need to install these packages in a different manner.  **HOW???**
+The following terminal commands are applicable to Linux and Mac only.  Windows users will need to install these packages in a different manner (we'll post instructions soon).
 
 1. pandas:
    ```
@@ -83,7 +83,7 @@ The following terminal commands are applicable to Linux and Mac only.  Windows u
 There are two options for importing this repository's contents to your computer.
 1. Download a .zip archive of the repository by either:
    - [Clicking this link](https://github.com/optimatorlab/mFSTSP/archive/master.zip), or
-   - Click the green "Clone or download" button above and choosing "Download ZIP". 
+   - Clicking the green "Clone or download" button above and choosing "Download ZIP". 
    
    In either case, unzip the archive on your computer to the location of your choice.
 
@@ -110,7 +110,7 @@ We will assume that you have downloaded the repository to a directory named `mFS
    cd ~/Downloads/mFSTSP
    ```
    
-   (Your path will differ if you saved the repository contents to a different directory.)
+   *(Your path will differ if you saved the repository contents to a different directory.)*
    
 3. The mFSTSP solvers are invoked by running the [`main.py`](main.py) Python script with 10 arguments.  This will have the following structure:
    ```
@@ -129,13 +129,13 @@ We will assume that you have downloaded the repository to a directory named `mFS
    - `Etype` - Indicates the endurance model that was employed.  Options include: `1` (nonlinear), `2` (linear), `3` (fixed/constant time), `4` (unlimited), and `5` (fixed/constant distance).  Details on these models are found in Section 4 of the [mFSTSP paper](https://ssrn.com/abstract=3338436).
    - `ITER` - Indicates the number of iterations to be run for each value of "LTL".  If `problemType == 1` (MILP), `ITER` is ignored (and can be assigned a value of `-1`).  Otherwise, `ITER` can be any integer `1` or greater for the heuristic.  NOTE: In the paper, `ITER` is assumed to be `1`.
    
-   Example 1 -- Solving the mFSTSP optimally:
+   **Example 1 -- Solving the mFSTSP via the MILP formulation:**
    
    ```
    python main.py 20170608T121632668184 101 3600 1 3 -1 1 1 1 -1
    ```
 
-   Example 2 -- Solving the mFSTSP via a heuristic:
+   **Example 2 -- Solving the mFSTSP via a heuristic:**
 
    ```
    python main.py 20170608T121632668184 101 5 2 3 -1 1 1 1 1
