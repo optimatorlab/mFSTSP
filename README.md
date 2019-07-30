@@ -1,4 +1,4 @@
-# The Multiple Flying Sidekick Traveling Salesman Problem (mFSTSP)
+# The Multiple Flying Sidekicks Traveling Salesman Problem (mFSTSP)
 
 This repository provides a collection of mFSTSP test problems, as well as the source code to solve mFSTSP instances. The mFSTSP is a variant of the classical TSP, in which one or more UAVs coordinate with a truck to deliver parcels in the minimum possible time. The code provided here consists of both the mixed integer linear programming (MILP) implementation and a heuristic to solve larger problems. 
 
@@ -190,6 +190,6 @@ This file contains the following columns:
 Details of each solution may be found in the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file contained within the `problemName` subdirectory of the [`Problems`](Problems) directory (e.g., [`Problems/20170608T121632668184`](Problems/20170608T121632668184)).  When a problem is run again, using the same settings (e.g., the same `vehicleFileID`, `numUAVs` and `problemType`), the solution details are appended to the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file.
 
 
-## Contact Info:
+## Contact Info
 
 For any queries, please send an email to r28@buffalo.edu.
