@@ -187,7 +187,9 @@ This file contains the following columns:
     
 2. Each of the 10-, 25-, 50-, and 100-customer problems (80 total) was run using four different settings of `vehicleFileID` and `numUAVs`.  These problems were solved only via the heuristic.  There are a total of 1280 solutions to these problems (80 * 4 * 4 * 1).
     
-Details of each solution may be found in the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file contained within the `problemName` subdirectory of the [`Problems`](Problems) directory (e.g., [`Problems/20170608T121632668184`](Problems/20170608T121632668184)).  When a problem is run again, using the same settings (e.g., the same `vehicleFileID`, `numUAVs` and `problemType`), the solution details are appended to the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file.
+Details of each solution may be found in the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file contained within the `problemName` subdirectory of the [`Problems`](Problems) directory (e.g., [`Problems/20170608T121632668184`](Problems/20170608T121632668184)).  
+
+When a problem is run again, using the same settings (e.g., the same `vehicleFileID`, `numUAVs` and `problemType`), the solution details are appended to the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file.
 
 
 ## Contact Info
