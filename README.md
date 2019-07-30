@@ -15,31 +15,12 @@ This repository contains **test problems**, **solutions**, and the **source code
 
    1. [`InstanceInfo.csv`](InstanceInfo.csv) contains a summary of all 100 "base" test problems, including the number of customers, geographic region (Buffalo, NY or Seattle, WA), and the number of customers within 5 or 10 miles of the depot.  This file may be useful if you are looking for problems with certain properties (e.g., 50-customer problems, or problems in Seattle). 
    
-   2. [`performance_summary_archive.csv`](performance_summary_archive.csv) provides information about solutions generated for each test problem.  This file contains the following columns:
-      - `problemName` - The name of the problem instance (written in the form of a timestamp).  This is a subdirectory name within the [`Problems`](Problems) directory.
-      - `vehicleFileID` - Indicates the speed and range of the UAVs.  See the note below, which describes the definitions of `101`, `102`, `103`, and `104`.
-      - `cutoffTime` - The maximum allowable runtime, in [seconds].  If the problem was solved via heuristic, this value represents the maximum runtime of Phase 3.
-      - `problemType` - Indicates if the problem was solved via MILP (`1`) or heuristic (`2`).
-      - `problemTypeString` - A text string describing the solution approach (`mFSTSP IP` or `mFSTSP Heuristic`).
-      - `numUAVs` - # of UAVs available (`1`, `2`, `3`, or `4`).
-      - `numTrucks` - This can be ignored; it will always have a value of `-1`.  However, in each problem there is actually exactly 1 truck.
-      - `requireTruckAtDepot` - A boolean value to indicate whether the truck is required to be at the depot when UAVs are launched from the depot.  This problem "variant" is described in Section 3 of the [mFSTSP paper](https://ssrn.com/abstract=3338436).
-      - `requireDriver` - A boolean value to indicate if the driver is required to be present when UAVs are launched/retrieved by the truck at customer locations.  This problem "variant" is described in Section 3 of the [mFSTSP paper](https://ssrn.com/abstract=3338436).
-      - `Etype` - Indicates the endurance model that was employed.  Options include: `1` (nonlinear), `2` (linear), `3` (fixed/constant time), `4` (unlimited), and `5` (fixed/constant distance).  Details on these models are found in Section 4 of the [mFSTSP paper](https://ssrn.com/abstract=3338436). 
-      - `ITER` - Indicates the number of iterations to be run for each value of "LTL".  If `problemType == 1` (MILP), `ITER` will be -1 (not applicable).  Otherwise, `ITER` will be `1` for the heuristic.  NOTE: This feature is not described/implemented in the [mFSTSP paper](https://ssrn.com/abstract=3338436).
-      - `runString` - This contains the command-line arguments used to solve the problem.  It is included here to allow copy/pasting.
-      - `numCustomers` - The total number of customers.
-      - `timestamp` - The time at which the problem was solved.
-      - `ofv` - The objective function value, as obtained by the given solution approach.
-      - `bestBound` - If `problemType == 1` (MILP), this is the best bound provided by Gurobi.  Otherwise, `bestBound = -1` for the heuristic (as no bounds are available).
-      - `totalTime` - The total runtime of the MILP or heuristic.
-      - `isOptimal` - A boolean value to indicate if the solution was provably optimal.  This only applies if `problemType == 1` (MILP); there is no proof of optimality for the heuristic.
-      - `numUAVcust` - The number of customers assigned to the UAV(s).
-      - `numTruckCust` - The number of customers assigned to the truck.
-      - `waitingTruck` - The amount of time, in [seconds], that the truck spends waiting on UAVs.
-      - `waitingUAV` - The amount of time, in [seconds], that the UAVs spend waiting on the truck.
-      
-      **NOTE:** [`performance_summary.csv`](performance_summary.csv) is an empty/placeholder file.  It will be populated only if/when you run the solver code.  This file currently exists solely to initialize the column headings.
+   
+   
+   
+   2. [`performance_summary_archive.csv`](performance_summary_archive.csv) provides information about solutions generated for each test problem in the [mFSTSP paper](https://ssrn.com/abstract=3338436). See the ["Archived Problem Solutions"](#Archived-Problem-Solutions) section below for details on the contents of this file.
+ 
+      - **NOTE:** [`performance_summary.csv`](performance_summary.csv) is an empty/placeholder file.  It will be populated only if/when you run the solver code.  This file currently exists solely to initialize the column headings.
        
    3. The `Problems` directory contains 100 sub-directories (one for each "base" problem).  Each sub-directory contains the following groups of files:
       - There are 2 files that are required by the solver.  These 2 files must be present in order to run the solver, as they are **inputs** to either the MILP model or the heuristic:
@@ -158,27 +139,23 @@ We will assume that you have downloaded the repository to a directory named `mFS
 
    Example 2 -- Solving the mFSTSP via a heuristic:
 
-```
+   ```
    python main.py 20170608T121632668184 101 5 2 3 -1 1 1 1 1
    ```
    
-4. You have solved the problem when you get the following type of message on terminal:
-```
-See 'performance_summary.csv' for statistics.
+4. The solver is finished when you receive a message like this in the terminal:
+   ```
+   See '[performance_summary.csv](blah)' for statistics.
 
-See 'Problems/20170608T121632668184/tbl_solutions_101_3_Heuristic.csv' for solution summary.
-```
+   See 'Problems/20170608T121632668184/tbl_solutions_101_3_Heuristic.csv' for solution summary.
+   ```
 
-### SOLUTION OUTPUT:
+   - The solver appends a row to the end of [`performance_summary.csv`](performance_summary.csv).  This row contains the objective function value, total run time, number of customers assigned to the truck, number of customers assigned to UAVs, etc.
 
-Once the code has run, it outputs the following:
-
-1) It adds a row in the 'performance_summary.csv' file. This row has information on quantities such as total run time, objective function value, number of customers assigned to truck, number of customers assigned to UAVs, etc.
-
-2) It also adds an assignment table in the 'tbl_solutions_vehicleFileID_numUAVs_problemType.csv' file, which is inside the subfolder (e.g. 20170608T121632668184) of the problem instance. The assignment table consists of travel and service times of different vehicles, the types of activities that they are performing, as well as their timelines. This is the schedule that will be followed by the truck-UAV system for those set of customers.
+   - The solver also generates a file of the form `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv`.  This file will appear within the subdirectory corresponding to the `problemName` within the [`Problems`](Problems) directory (e.g.,  [`Problems/20170608T121632668184`](Problems/20170608T121632668184)) in the above example.  The solutions file contains the objective function value and a detailed schedule for the truck and UAV(s).
 
 
-### ARCHIVED PROBLEM SOLUTIONS:
+## Archived Problem Solutions
 
 The package also contains the solution of the problem instances, which is used in the analysis section of the paper. A file called 'performance_summary_archive.csv' contains the summary of these already-solved problem instances (with different parameter settings). Specifically, it has the solution of following instances:
 
@@ -189,8 +166,31 @@ The package also contains the solution of the problem instances, which is used i
 The complete parameter (e.g. cutoffTime, ITER, Etype, etc.) specifications for each problem solution can be found in 'performance_summary_archive.csv'. The assignment table corresponding to each of these solutions also exists in the 'tbl_solutions_vehicleFileID_numUAVs_problemType.csv' file, which is inside the subfolder (e.g. 20170608T121632668184) of the problem instance. When a problem is ran again using the same settings (e.g. same vehicleFileID, numUAVs and problemType), it just appends another assignment table in the same csv file.
 
 
-&nbsp;
+[`performance_summary_archive.csv`](performance_summary_archive.csv) provides information about solutions generated for each test problem in the [mFSTSP paper](https://ssrn.com/abstract=3338436).  This file contains the following columns:
+      - `problemName` - The name of the problem instance (written in the form of a timestamp).  This is a subdirectory name within the [`Problems`](Problems) directory.
+      - `vehicleFileID` - Indicates the speed and range of the UAVs.  See the note below, which describes the definitions of `101`, `102`, `103`, and `104`.
+      - `cutoffTime` - The maximum allowable runtime, in [seconds].  If the problem was solved via heuristic, this value represents the maximum runtime of Phase 3.
+      - `problemType` - Indicates if the problem was solved via MILP (`1`) or heuristic (`2`).
+      - `problemTypeString` - A text string describing the solution approach (`mFSTSP IP` or `mFSTSP Heuristic`).
+      - `numUAVs` - # of UAVs available (`1`, `2`, `3`, or `4`).
+      - `numTrucks` - This can be ignored; it will always have a value of `-1`.  However, in each problem there is actually exactly 1 truck.
+      - `requireTruckAtDepot` - A boolean value to indicate whether the truck is required to be at the depot when UAVs are launched from the depot.  This problem "variant" is described in Section 3 of the [mFSTSP paper](https://ssrn.com/abstract=3338436).
+      - `requireDriver` - A boolean value to indicate if the driver is required to be present when UAVs are launched/retrieved by the truck at customer locations.  This problem "variant" is described in Section 3 of the [mFSTSP paper](https://ssrn.com/abstract=3338436).
+      - `Etype` - Indicates the endurance model that was employed.  Options include: `1` (nonlinear), `2` (linear), `3` (fixed/constant time), `4` (unlimited), and `5` (fixed/constant distance).  Details on these models are found in Section 4 of the [mFSTSP paper](https://ssrn.com/abstract=3338436). 
+      - `ITER` - Indicates the number of iterations to be run for each value of "LTL".  If `problemType == 1` (MILP), `ITER` will be -1 (not applicable).  Otherwise, `ITER` will be `1` for the heuristic.  NOTE: This feature is not described/implemented in the [mFSTSP paper](https://ssrn.com/abstract=3338436).
+      - `runString` - This contains the command-line arguments used to solve the problem.  It is included here to allow copy/pasting.
+      - `numCustomers` - The total number of customers.
+      - `timestamp` - The time at which the problem was solved.
+      - `ofv` - The objective function value, as obtained by the given solution approach.
+      - `bestBound` - If `problemType == 1` (MILP), this is the best bound provided by Gurobi.  Otherwise, `bestBound = -1` for the heuristic (as no bounds are available).
+      - `totalTime` - The total runtime of the MILP or heuristic.
+      - `isOptimal` - A boolean value to indicate if the solution was provably optimal.  This only applies if `problemType == 1` (MILP); there is no proof of optimality for the heuristic.
+      - `numUAVcust` - The number of customers assigned to the UAV(s).
+      - `numTruckCust` - The number of customers assigned to the truck.
+      - `waitingTruck` - The amount of time, in [seconds], that the truck spends waiting on UAVs.
+      - `waitingUAV` - The amount of time, in [seconds], that the UAVs spend waiting on the truck.
 
-### Contact Info:
+
+## Contact Info:
 
 For any queries, please send an email to r28@buffalo.edu.
