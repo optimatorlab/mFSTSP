@@ -107,7 +107,7 @@ There are two options for importing this repository's contents to your computer.
    - For **Windows**:  We will assume that you have downloaded the repository to a folder named `mFSTSP` on the "D:\" drive.  If you saved the `mFSTSP` directory elsewhere, you'll need to modify the paths below accordingly.
       ```
       D:
-      cd Projects\mFSTSP
+      cd mFSTSP
       ```
 
       *(Your path will differ if you saved the repository contents to a different directory.)*

@@ -4,23 +4,6 @@
 #
 # pandas:
 #	sudo pip install pandas
-#
-# scipy:
-#	sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas
-#
-# 		DID NOT DO THESE:
-#			sudo apt-get install python-numpy python-scipy
-#			sudo python -m pip install --upgrade pip
-#			sudo pip install --user numpy scipy matplotlib ipython jupyter pandas sympy nose
-#
-# geopy
-#	sudo pip install geopy
-#
-# R TSP
-# 	R		[NOTE:  This was ono version 3.0.2]
-#	> install.packages("TSP")
-# 	[agree to install in another location (defaults to /home/murray/R/x86_64-pc-linux-gnu-library/3.0)
-#	I chose CA (ON) as the mirror.  Some mirrors don't have the TSP package. 
 
 
 
@@ -66,10 +49,6 @@ from gurobipy import *
 import os
 import os.path
 from subprocess import call		# allow calling an external command in python.  See http://stackoverflow.com/questions/89228/calling-an-external-command-in-python
-
-import urllib2
-import json
-import numpy
 
 from solve_mfstsp_IP import *
 from solve_mfstsp_heuristic import *

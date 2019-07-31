@@ -343,7 +343,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 	
 	# Define M
 	M = 0		# Initialize
-	unvisitedCustomers = range(1,c+1)   # We haven't visited anyone yet.	
+	unvisitedCustomers = list(range(1,c+1))   # We haven't visited anyone yet.	
 	i = 0		# Start at the depot
 
 	while (len(unvisitedCustomers) > 0):
@@ -445,7 +445,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 				# Constraint (18): No UAV launch before delivery happens, if it happens before launch	
 				m.addConstr(decvarhattprime[v][i] >= decvarbart[i] + sL[v][i] - M*(1 - decvarzl[0][v][i]), "Constr.18.%d.%d" % (v,i))			
 			else:
-				# Constraint (58): 
+				# Constraint (60): 
 				m.addConstr(decvarhattprime[v][i] >= decvarcheckt[i] + sL[v][i] - M*(1 - quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for j in C if j != i)), "Constr.58.%d.%d" % (v,i))	
 	
 			# Strengthening Constraint: (NOT IN THE IP MODEL)	
@@ -459,38 +459,38 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 
 			if (REQUIRE_DRIVER):
 				if (REQUIRE_TRUCK_AT_DEPOT):
-					# Constraint (23):
+					# Constraint (25):
 					m.addConstr(decvarchecktprime[v][k] >= decvarcheckt[k] + sR[v][k] - M*(1 - decvarzr[v][0][k]), "Constr.23.%d.%d" % (v,k))
-					# Constraint (24):			
+					# Constraint (26):			
 					m.addConstr(decvarchecktprime[v][k] >= decvarbart[k] + sR[v][k] - M*(1 - decvarzr[0][v][k]), "Constr.24.%d.%d" % (v,k))
 				else:
 					if k != c+1:
-						# Constraint (54):
+						# Constraint (56):
 						m.addConstr(decvarchecktprime[v][k] >= decvarcheckt[k] + sR[v][k] - M*(1 - decvarzr[v][0][k]), "Constr.54.%d.%d" % (v,k))
-						# Constraint (55):
+						# Constraint (57):
 						m.addConstr(decvarchecktprime[v][k] >= decvarbart[k] + sR[v][k] - M*(1 - decvarzr[0][v][k]), "Constr.55.%d.%d" % (v,k))
 
 			else:
 				if (REQUIRE_TRUCK_AT_DEPOT):
-					# Constraint (59):
+					# Constraint (61):
 					m.addConstr(decvarchecktprime[v][k] >= decvarcheckt[k] + sR[v][k] - M*(1 - quicksum(quicksum(decvary[v][i][j][k] for i in N_zero if [v,i,j,k] in P)  for j in C if j != i)) , "Constr.59.%d.%d" % (v,k))			
 				else:
 					if k != c+1:
-						# Constraint (59):
+						# Constraint (61):
 						m.addConstr(decvarchecktprime[v][k] >= decvarcheckt[k] + sR[v][k] - M*(1 - quicksum(quicksum(decvary[v][i][j][k] for i in N_zero if [v,i,j,k] in P)  for j in C if j != i)) , "Constr.59.%d.%d" % (v,k))
 			
 			for j in C:
 				if (j != k):
-					# Constraint (27):
+					# Constraint (29):
 					m.addConstr(decvarchecktprime[v][k] >= decvarhattprime[v][j] + tauprime[v][j][k] + sR[v][k] - M*(1 - quicksum(decvary[v][i][j][k] for i in N_zero if [v,i,j,k] in P)), "Constr.27.%d.%d.%d" % (v,k,j))
 	
 
 			if (REQUIRE_TRUCK_AT_DEPOT):
-				# Constraint (34):
+				# Constraint (36):
 				m.addConstr(decvarhatt[k] >= decvarchecktprime[v][k] - M*(1 - quicksum(quicksum(decvary[v][i][j][k] for j in C if [v,i,j,k] in P) for i in N_zero if i != k)), "Constr.34.%d.%d" % (v,k))	
 			else:
 			 	if k != c+1:
-			 		# Constraint (34): (Only do this if concerned with minimizing the TRUCK return time, and not the last vehicle)
+			 		# Constraint (36): (Only do this if concerned with minimizing the TRUCK return time, and not the last vehicle)
 			 		m.addConstr(decvarhatt[k] >= decvarchecktprime[v][k] - M*(1 - quicksum(quicksum(decvary[v][i][j][k] for j in C if [v,i,j,k] in P) for i in N_zero if i != k)), "Constr.34.%d.%d" % (v,k))
 
 
@@ -506,7 +506,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 							# Constraint (8): UAV can only be released from customer node if truck has visited customer node
 							m.addConstr(2*decvary[v][i][j][k] <= quicksum(decvarx[h][i] for h in N_zero if h!=i) + quicksum(decvarx[l][k] for l in C if l!=k), "Constr.8.%d.%d.%d.%d" % (v,i,j,k))
 
-							# Constraint (28): Endurance limitations
+							# Constraint (30): Endurance limitations
 							m.addConstr(decvarchecktprime[v][k] - sR[v][k] - decvarhattprime[v][i] <= eee[v][i][j][k] + M*(1 - decvary[v][i][j][k]), "Constr.28.%d.%d.%d.%d" % (v,i,j,k))
 
 			
@@ -528,69 +528,69 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 					# Constraint (21):
 					m.addConstr(decvarchecktprime[v][j] >= decvarhattprime[v][i] + tauprime[v][i][j] - M*(1 - quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P)), "Constr.21.%d.%d.%d" % (v,j,i))	
 
-					# Constraint (21b):
+					# Constraint (22):
 					m.addConstr(decvarchecktprime[v][j] <= decvarhattprime[v][i] + tauprime[v][i][j] + M*(1 - quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P)), "Constr.21b.%d.%d.%d" % (v,j,i))	
 			
-			# Constraint (22):
+			# Constraint (23):
 			m.addConstr(decvarhattprime[v][j] >= decvarchecktprime[v][j] + sigmaprime[j]*(quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for i in N_zero if i != j)), "Constr.22.%d.%d" % (v,j))	
 
-			# Constraint (22b):
+			# Constraint (24):
 			m.addConstr(decvarhattprime[v][j] <= decvarchecktprime[v][j] + sigmaprime[j] + M*(1 - quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for i in N_zero if i != j)), "Constr.22b.%d.%d" % (v,j))	
 
 		for k in N_zero:
 			if (REQUIRE_TRUCK_AT_DEPOT):
-				# Constraint (35):
+				# Constraint (37):
 				m.addConstr(decvarhatt[k] >= decvarhattprime[v][k] - M*(1 - quicksum(quicksum(decvary[v][k][l][q] for q in N_plus if [v,k,l,q] in P) for l in C if l != k)), "Constr.35.%d.%d" % (v, k))
 			else:
 				if k != 0:
-					# Constraint (57):
+					# Constraint (59):
 					m.addConstr(decvarhatt[k] >= decvarhattprime[v][k] - M*(1 - quicksum(quicksum(decvary[v][k][l][q] for q in N_plus if [v,k,l,q] in P) for l in C if l != k)), "Constr.57.%d.%d" % (v, k))
 			
 
 		for v2 in V:
 			if (v2 != v):
 				for k in N_plus:
-					# Constraint (25):
+					# Constraint (27):
 					m.addConstr(decvarchecktprime[v][k] >= decvarchecktprime[v2][k] + sR[v][k] - M*(1 - decvarzr[v2][v][k]), "Constr.25.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (37):
+					# Constraint (39):
 					m.addConstr(decvarzr[v][v2][k] <= quicksum(quicksum(decvary[v][i][j][k] for j in C if [v,i,j,k] in P) for i in N_zero if i != k), "Constr.37.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (38):	
+					# Constraint (40):	
 					m.addConstr(decvarzr[v][v2][k] <= quicksum(quicksum(decvary[v2][i][j][k] for j in C if [v2,i,j,k] in P) for i in N_zero if i != k), "Constr.38.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (39):	
+					# Constraint (41):	
 					m.addConstr(decvarzr[v][v2][k] + decvarzr[v2][v][k] <= 1, "Constr.39.%d.%d.%d" % (v,v2,k))	
 
-					# Constraint (40):
+					# Constraint (42):
 					m.addConstr(decvarzr[v][v2][k] + decvarzr[v2][v][k] + 1 >= quicksum(quicksum(decvary[v][i][j][k] for j in C if [v,i,j,k] in P) for i in N_zero if i != k) + quicksum(quicksum(decvary[v2][i][j][k] for j in C if [v2,i,j,k] in P) for i in N_zero if i != k), "Constr.40.%d.%d.%d" % (v,v2,k))	
 
 				for k in C:
-					# Constraint (26):
+					# Constraint (28):
 					m.addConstr(decvarchecktprime[v][k] >= decvarhattprime[v2][k] + sR[v][k] - M*(1 - decvarzprime[v2][v][k]), "Constr.26.%d.%d.%d" % (v,v2,k))	
 
-					# Constraint (46):
+					# Constraint (48):
 					m.addConstr(decvarzprime[v2][v][k] <= quicksum(quicksum(decvary[v2][k][l][q] for q in N_plus if [v2,k,l,q] in P) for l in C if l != k), "Constr.46.%d.%d.%d" % (v,v2,k))	
 
-					# Constraint (47):
+					# Constraint (49):
 					m.addConstr(decvarzdp[v2][v][k] <= quicksum(quicksum(decvary[v][k][l][q] for q in N_plus if [v,k,l,q] in P) for l in C if l != k), "Constr.47.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (48):	
+					# Constraint (50):	
 					m.addConstr(decvarzprime[v2][v][k] <= quicksum(quicksum(decvary[v][i][j][k] for j in C if [v,i,j,k] in P) for i in N_zero if i != k), "Constr.48.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (49):	
+					# Constraint (51):	
 					m.addConstr(decvarzdp[v2][v][k] <= quicksum(quicksum(decvary[v2][i][j][k] for j in C if [v2,i,j,k] in P) for i in N_zero if i != k), "Constr.49.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (50):
+					# Constraint (52):
 					m.addConstr(decvarzprime[v2][v][k] + decvarzdp[v][v2][k] + 1 >= quicksum(quicksum(decvary[v][i][j][k] for j in C if [v,i,j,k] in P) for i in N_zero if i != k) + quicksum(quicksum(decvary[v2][k][l][q] for q in N_plus if [v2,k,l,q] in P) for l in C if l != k), "Constr.50.%d.%d.%d" % (v,v2,k))	
 					
-					# Constraint (51):
+					# Constraint (53):
 					m.addConstr(decvarzprime[v2][v][k] + decvarzdp[v][v2][k] <= 1, "Constr.51.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (52):	
+					# Constraint (54):	
 					m.addConstr(decvarzprime[v2][v][k] + decvarzprime[v][v2][k] <= 1, "Constr.52.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (53):	
+					# Constraint (55):	
 					m.addConstr(decvarzdp[v2][v][k] + decvarzdp[v][v2][k] <= 1, "Constr.53.%d.%d.%d" % (v,v2,k))	
 
 
@@ -598,16 +598,16 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 					# Constraint (19):
 					m.addConstr(decvarhattprime[v][i] >= decvarhattprime[v2][i] + sL[v][i] - M*(1 - decvarzl[v2][v][i]), "Constr.19.%d.%d.%d" % (v,v2,i))	
 
-					# Constraint (42):
+					# Constraint (44):
 					m.addConstr(decvarzl[v][v2][i] <= quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for j in C if j != i), "Constr.42.%d.%d.%d" % (v,v2,i))	
 
-					# Constraint (43):
+					# Constraint (45):
 					m.addConstr(decvarzl[v][v2][i] <= quicksum(quicksum(decvary[v2][i][j][k] for k in N_plus if [v2,i,j,k] in P) for j in C if j != i), "Constr.43.%d.%d.%d" % (v,v2,i))	
 
-					# Constraint (44):
+					# Constraint (46):
 					m.addConstr(decvarzl[v][v2][i] + decvarzl[v2][v][i] <= 1, "Constr.44.%d.%d.%d" % (v,v2,i))	
 
-					# Constraint (45):
+					# Constraint (47):
 					m.addConstr(decvarzl[v][v2][i] + decvarzl[v2][v][i] + 1 >= quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for j in C if j != i) + quicksum(quicksum(decvary[v2][i][j][k] for k in N_plus if [v2,i,j,k] in P) for j in C if j != i), "Constr.45.%d.%d.%d" % (v,v2,i))	
 
 				for i in C:
@@ -665,7 +665,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 	for i in N_zero:
 		for j in N_plus:
 			if (j != i):
-				# Constraint (29): Setting the truck's arrival time.
+				# Constraint (31): Setting the truck's arrival time.
 				m.addConstr(decvarcheckt[j] >= decvarhatt[i] + tau[i][j] - M*(1 - decvarx[i][j]), "Constr.29.%d.%d" % (i,j))	
 
 		# Strengthening Constraint: (NOT IN THE IP MODEL)	
@@ -673,10 +673,10 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 
 
 	for k in N_plus:
-		# Constraint (30):
+		# Constraint (32):
 		m.addConstr(decvarbart[k] >= decvarcheckt[k] + sigma[k]*(quicksum(decvarx[j][k] for j in N_zero if j != k)), "Constr.30.%d" % (k))
 
-		# Constraint (33):
+		# Constraint (35):
 		m.addConstr(decvarhatt[k] >= decvarbart[k], "Constr.33.%d" % (k))	
 	
 
@@ -684,28 +684,28 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 		for k in N_plus:
 			for v in V:
 				if (REQUIRE_TRUCK_AT_DEPOT):
-					# Constraint (31):
+					# Constraint (33):
 					m.addConstr(decvarbart[k] >= decvarchecktprime[v][k] + sigma[k] - M*(1 - decvarzr[v][0][k]), "Constr.31.%d.%d" % (k, v))
 				else:
 					if k != c+1:
-						# Constraint (56):
+						# Constraint (58):
 						m.addConstr(decvarbart[k] >= decvarchecktprime[v][k] + sigma[k] - M*(1 - decvarzr[v][0][k]), "Constr.56.%d.%d" % (k, v))			
 
 
 		for k in C:
 			for v in V:
-				# Constraint (32):
+				# Constraint (34):
 				m.addConstr(decvarbart[k] >= decvarhattprime[v][k] + sigma[k] - M*(1 - decvarzl[v][0][k]), "Constr.32.%d.%d" % (k, v))			
 
 
 		for v in V:
 			for k in N_plus:
-				# Constraint (36):
+				# Constraint (38):
 				m.addConstr(decvarzr[0][v][k] + decvarzr[v][0][k] == quicksum(quicksum(decvary[v][i][j][k] for j in C if [v,i,j,k] in P) for i in N_zero if i != k), "Constr.36.%d.%d" % (v,k))	
 
 	
 			for i in N_zero:
-				# Constraint (41):
+				# Constraint (43):
 				m.addConstr(decvarzl[0][v][i] + decvarzl[v][0][i] == quicksum(quicksum(decvary[v][i][j][k] for k in N_plus if [v,i,j,k] in P) for j in C if j != i), "Constr.41.%d.%d" % (v,i))	
 
 	
@@ -1011,7 +1011,7 @@ def solve_mfstsp_IP(node, vehicle, travel, cutoffTime, REQUIRE_TRUCK_AT_DEPOT, R
 	
 			# Now, sort the tmpTimes array based on ascending start times.  
 			# Along the way, check for truck idle times.
-			unasgnInd = range(0, len(tmpTimes))		
+			unasgnInd = list(range(0, len(tmpTimes)))		
 			while (len(unasgnInd) > 0):
 				tmpMin = 2*decvarhatt[j].x	# Set to a large number
 				# Find the minimum unassigned time

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 from __future__ import division
-import urllib2
-import json
-import numpy
 from math import *
 from collections import defaultdict
 import os
