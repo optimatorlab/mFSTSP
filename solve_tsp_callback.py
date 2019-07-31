@@ -11,9 +11,6 @@ from dfs import *
 import os
 
 
-# =============================================================
-homeDirectory = os.environ['HOME']  # '/home/murray'
-
 NODE_TYPE_DEPOT		= 0
 NODE_TYPE_CUST		= 1
 

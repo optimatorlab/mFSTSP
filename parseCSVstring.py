@@ -18,7 +18,7 @@ def parseCSVstring(filename, returnJagged=False, fillerValue=-1, delimiter=',', 
 				# Got to next line
 				continue
 
-			row = map(str, filter(None, line.rstrip().split(delimiter)))
+			row = list(map(str, filter(None, line.rstrip().split(delimiter))))
 			matrix.append(row)
 			if (len(row) > maxSize):
 				maxSize = len(row)

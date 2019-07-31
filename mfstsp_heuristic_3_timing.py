@@ -249,7 +249,7 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 	
 	# Define M
 	M = 0		# Initialize
-	unvisitedCustomers = range(1,c+1)   # We haven't visited anyone yet.	
+	unvisitedCustomers = list(range(1,c+1))   # We haven't visited anyone yet.	
 	i = 0		# Start at the depot
 
 	while (len(unvisitedCustomers) > 0):
@@ -290,136 +290,136 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 	for k in N_plus:
 		for v in landsat[k]:
 			if (REQUIRE_TRUCK_AT_DEPOT):
-				# Constraint (72):
+				# Constraint (76):
 				m.addConstr(decvarchecktprime[v][k] >= decvarcheckt[k] + sR[v][k] - M*decvarzhat[B[v][k]], "Constr.72.%d.%d" % (v,k))		
 				if (REQUIRE_DRIVER):
-					# Constraint (73):	
+					# Constraint (77):	
 					m.addConstr(decvarchecktprime[v][k] >= decvarbart[k] + sR[v][k] - M*(1 - decvarzr[0][v][k]), "Constr.73.%d.%d" % (v,k))			
 
 			elif (k != c+1):
-				# Constraint (72): We don't require the truck to be at the depot for landing.  Ignore when k == c+1
+				# Constraint (76): We don't require the truck to be at the depot for landing.  Ignore when k == c+1
 				m.addConstr(decvarchecktprime[v][k] >= decvarcheckt[k] + sR[v][k] -M*decvarzhat[B[v][k]], "Constr.72.%d.%d" % (v,k))
 				if (REQUIRE_DRIVER):
-					# Constraint (73):
+					# Constraint (77):
 					m.addConstr(decvarchecktprime[v][k] >= decvarbart[k] + sR[v][k] - M*(1 - decvarzr[0][v][k]), "Constr.73.%d.%d" % (v,k))		
 
 			for v2 in landsat[k]:
 				if (v2 != v):
-					# Constraint (74):
+					# Constraint (78):
 					m.addConstr(decvarchecktprime[v][k] >= decvarchecktprime[v2][k] + sR[v][k] - M*(1 - decvarzr[v2][v][k]), "Constr.74.%d.%d.%d" % (v,v2,k))
 			
 			if (k != c+1):
 				for v2 in launchesfrom[k]:
 					if (v2 != v):
-						# Constraint (75):
+						# Constraint (79):
 						m.addConstr(decvarchecktprime[v][k] >= decvarhattprime[v2][k] + sR[v][k] - M*(1 - decvarzprime[v2][v][k]), "Constr.75.%d.%d.%d" % (v,v2,k))	
 
 	for [v,i,j,k] in y:
-		# Constraint (76):
+		# Constraint (80):
 		m.addConstr(decvarchecktprime[v][k] >= decvarhattprime[v][j] + (tauprime[v][j][k] + sR[v][k])*(1-decvarzhat[j]), "Constr.76.%d.%d.%d" % (v,k,j))
 
-		# Constraint (70):	
+		# Constraint (72):	
 		m.addConstr(decvarchecktprime[v][j] >= decvarhattprime[v][i] + tauprime[v][i][j]*(1-decvarzhat[j]), "Constr.70.%d.%d.%d" % (v,j,i))
 
-		# Constraint (70b):
+		# Constraint (73):
 		m.addConstr(decvarchecktprime[v][j] <= decvarhattprime[v][i] + tauprime[v][i][j] + M*(decvarzhat[j]), "Constr.70b.%d.%d.%d" % (v,j,i))
 
-		# Constraint (71):
+		# Constraint (74):
 		m.addConstr(decvarhattprime[v][j] >= decvarchecktprime[v][j] + sigmaprime[j]*(1-decvarzhat[j]), "Constr.71.%d.%d" % (v,j))
 
-		# Constraint (71b):
+		# Constraint (75):
 		m.addConstr(decvarhattprime[v][j] <= decvarchecktprime[v][j] + sigmaprime[j] + M*(decvarzhat[j]), "Constr.71b.%d.%d" % (v,j))
 
-		# Constraint (77):	
+		# Constraint (81):	
 		m.addConstr(decvarchecktprime[v][k] - sR[v][k] - decvarhattprime[v][i] <= eee[v][i][j][k], "Constr.77.%d.%d.%d" % (v,i,k))	
 
 
 	for i in N_zero:
 		for v in launchesfrom[i]:
-			# Constraint (65):
+			# Constraint (67):
 			m.addConstr(decvarhattprime[v][i] >= decvarchecktprime[v][i] + sL[v][i]*(1-decvarzhat[A[v][i]]), "Constr.65.%d.%d" % (v,i))	
 			
 			if (REQUIRE_DRIVER):
-				# Constraint (66):
+				# Constraint (68):
 				m.addConstr(decvarhattprime[v][i] >= decvarcheckt[i] + sL[v][i] - M*(1 - decvarzl[v][0][i]), "Constr.66.%d.%d" % (v,i))
 
-				# Constraint (67):
+				# Constraint (69):
 				m.addConstr(decvarhattprime[v][i] >= decvarbart[i] + sL[v][i] - M*(1 - decvarzl[0][v][i]), "Constr.67.%d.%d" % (v,i))			
 			
 			else:
-				# Constraint (104):
+				# Constraint (108):
 				m.addConstr(decvarhattprime[v][i] >= decvarcheckt[i] + sL[v][i] - M*(decvarzhat[A[v][i]]), "Constr.104.%d.%d" % (v,i))
 			
 			for v2 in launchesfrom[i]:
 				if (v2 != v):
-					# Constraint (68):
+					# Constraint (70):
 					m.addConstr(decvarhattprime[v][i] >= decvarhattprime[v2][i] + sL[v][i] - M*(1 - decvarzl[v2][v][i]), "Constr.68.%d.%d.%d" % (v,v2,i))			
 
 		if (i != 0):
 			for v in landsat[i]:
 				for v2 in launchesfrom[i]:
 					if (v2 != v):
-						# Constraint (69):
+						# Constraint (71):
 						m.addConstr(decvarhattprime[v2][i] >= decvarchecktprime[v][i] + sL[v2][i] - M*(1 - decvarzdp[v][v2][i]), "Constr.69.%d.%d.%d" % (v,v2,i))	
 
 
 	for [i,j] in x:
-		# Constraint (78):
+		# Constraint (82):
 		m.addConstr(decvarcheckt[j] >= decvarhatt[i] + tau[i][j], "Constr.78.%d.%d" % (i,j))	
 
 
 	for k in N_plus:
-		# Constraint (83):
+		# Constraint (87):
 		m.addConstr(decvarhatt[k] >= decvarbart[k], "Constr.83.%d" % (k))			
 
 		if (k != c+1):
-			# Constraint (79):
+			# Constraint (83):
 			m.addConstr(decvarbart[k] >= decvarcheckt[k] + sigma[k], "Constr.79.%d" % (k))	
 
 			for v in launchesfrom[k]:
-				# Constraint (85):
+				# Constraint (89):
 				m.addConstr(decvarhatt[k] >= decvarhattprime[v][k], "Constr.85.%d.%d" % (v, k))
 
 				if (REQUIRE_DRIVER):
-					# Constraint (82):
+					# Constraint (86):
 					m.addConstr(decvarbart[k] >= decvarhattprime[v][k] + sigma[k] - M*(1 - decvarzl[v][0][k]), "Constr.82.%d" % (k))			
 
 		else:
-			# Constraint (80):
+			# Constraint (84):
 			m.addConstr(decvarbart[k] >= decvarcheckt[k], "Constr.80.%d" % (k))	
 	
 		for v in landsat[k]:
-			# Constraint (84):
+			# Constraint (88):
 			m.addConstr(decvarhatt[k] >= decvarchecktprime[v][k], "Constr.84.%d.%d" % (v,k))
 
 			if (REQUIRE_DRIVER):
-				# Constraint (81):
+				# Constraint (85):
 				m.addConstr(decvarbart[k] >= decvarchecktprime[v][k] + sigma[k] - M*(1 - decvarzr[v][0][k]), "Constr.81.%d" % (k))
 
-				# Constraint (87):
+				# Constraint (91):
 				m.addConstr(decvarzr[0][v][k] + decvarzr[v][0][k] + decvarzhat[B[v][k]] == 1, "Constr.87.%d.%d" % (v,k))
 
 			for v2 in landsat[k]:
 				if (v2 != v):
-					# Constraint (88):
+					# Constraint (92):
 					m.addConstr(decvarzr[v][v2][k] + decvarzr[v2][v][k] <= 1, "Constr.88.%d.%d.%d" % (v,v2,k))
 
-					# Constraint (89):	
+					# Constraint (93):	
 					m.addConstr(decvarzr[v][v2][k] + decvarzr[v2][v][k] + decvarzhat[B[v][k]] + decvarzhat[B[v2][k]] >= 1, "Constr.89.%d.%d.%d" % (v,v2,k))	
 
 
 	for i in N_zero:
 		for v in launchesfrom[i]:
 			if (REQUIRE_DRIVER):
-				# Constraint (90):
+				# Constraint (94):
 				m.addConstr(decvarzl[0][v][i] + decvarzl[v][0][i] + decvarzhat[A[v][i]] == 1, "Constr.90.%d.%d" % (v,i))
 
 			for v2 in launchesfrom[i]:
 				if (v2 != v):
-					# Constraint (91):
+					# Constraint (95):
 					m.addConstr(decvarzl[v][v2][i] + decvarzl[v2][v][i] <= 1, "Constr.91.%d.%d.%d" % (v,v2,i))
 
-					# Constraint (92):	
+					# Constraint (96):	
 					m.addConstr(decvarzl[v][v2][i] + decvarzl[v2][v][i] + decvarzhat[A[v][i]] + decvarzhat[A[v2][i]] >= 1, "Constr.92.%d.%d.%d" % (v,v2,i))	
 	
 
@@ -428,10 +428,10 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 			for v in landsat[k]:
 				for v2 in launchesfrom[k]:
 					if (v2 != v):
-						# Constraint (94):
+						# Constraint (98):
 						m.addConstr(decvarzprime[v2][v][k] + decvarzdp[v][v2][k] <= 1, "Constr.94.%d.%d.%d" % (v,v2,k))
 
-						# Constraint (93):
+						# Constraint (97):
 						m.addConstr(decvarzprime[v2][v][k] + decvarzdp[v][v2][k] + decvarzhat[B[v][k]] + decvarzhat[A[v2][k]] >= 1, "Constr.93.%d.%d.%d" % (v,v2,k))	
 
 
@@ -443,7 +443,7 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 			tmpSR = 0
 			for v in landsat[k]:
 				tmpSR += sR[v][k]*(1-decvarzhat[B[v][k]])
-			# Constraint (95):
+			# Constraint (99):
 			m.addConstr(decvarhatt[k] >= decvarcheckt[k] + tmpSL + tmpSR, "Constr.95.%d" % (k))
 
 		elif (k != c+1):
@@ -453,13 +453,13 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 			tmpSR = 0
 			for v in landsat[k]:
 				tmpSR += sR[v][k]*(1-decvarzhat[B[v][k]])
-			# Constraint (95):
+			# Constraint (99):
 			m.addConstr(decvarhatt[k] >= decvarcheckt[k] + tmpSL + tmpSR, "Constr.95.%d" % (k))
 
 
 	if (REQUIRE_TRUCK_AT_DEPOT):
 		for v in launchesfrom[0]:
-			# Constraint (86):
+			# Constraint (90):
 			m.addConstr(decvarhatt[0] >= decvarhattprime[v][0], "Constr.86.%d" % (v))	
 
 	
@@ -747,7 +747,7 @@ def mfstsp_heuristic_3_timing(x, y, z, node, eee, N, P, V, cutoffTime, c, sigma,
 		
 				# Now, sort the tmpTimes array based on ascending start times.  
 				# Along the way, check for truck idle times.
-				unasgnInd = range(0, len(tmpTimes))		
+				unasgnInd = list(range(0, len(tmpTimes)))		
 				while (len(unasgnInd) > 0):
 					tmpMin = 2*decvarhatt[j].x	# Set to a large number
 					# Find the minimum unassigned time
