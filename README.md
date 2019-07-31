@@ -43,6 +43,7 @@ This repository contains **test problems**, **solutions**, and the **source code
 
 2. Although there are numerous Python scripts in this repository, [`main.py`](main.py) is the only one you will directly interact with.  This script makes use of the other Python scripts.  See "[Running the Solvers](#Running-the-Solvers)" below for instructions on generating solutions.
 
+----
 
 ## Installation and Setup
 
@@ -55,28 +56,20 @@ It has been tested on **Windows**, **Linux**, and **Mac**.
 
 ### Prerequisites
 - Both the exact and hueristic methods require [Gurobi](http://gurobi.com) as the MILP solver.
+- The `pandas` Python package is also required.
 
-#### Additional Required Python Modules
-To run this package, it is necessary to have the Python modules outlined below. 
-The following terminal commands are applicable to Linux and Mac only.  Windows users will need to install these packages in a different manner (we'll post instructions soon).
-
-1. pandas:
+- For **Linux/Mac**, issue the following terminal command to install `pandas`:
    ```
    pip install pandas
    ```
    *If you receive errors related to "access denied", try running `sudo pip install pandas`.*
-   
-2. geopy:
-   ```
-   sudo pip install geopy
-   ```
-   *If you receive errors related to "access denied", try running `sudo pip install geopy`.*
 
-3. scipy:
-   ```
-   sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas
-   ```
-
+- For **Windows**, there are two options:
+   1. If you installed Python through [Anaconda](https://www.anaconda.com/), `pandas` is already included.
+   2. Otherwise, enter the following at a command prompt:
+      ```
+      py -m pip install pandas
+      ```
 
 ### Download Problems and Source Code
 
@@ -99,18 +92,25 @@ There are two options for importing this repository's contents to your computer.
   
 ### Running the Solvers
 
-*NOTE: The following instructions are written for Linux/Mac users.  Instructions for Windows users will be provided soon.*
 
-We will assume that you have downloaded the repository to a directory named `mFSTSP` within your `Downloads` directory.  If you saved the `mFSTSP` directory elsewhere, you'll need to modify the paths below accordingly.
 
-1. Open a terminal (command-line) window.
+1. Open a terminal (command prompt) window.
 
-2. Change directories to the location where the `mFSTSP` directory is saved:
-   ```
-   cd ~/Downloads/mFSTSP
-   ```
+2. Change directories to the location where the `mFSTSP` directory is saved.
+   - For **Linux/Mac**:  We will assume that you have downloaded the repository to a directory named `mFSTSP` within your `Downloads` directory.  If you saved the `mFSTSP` directory elsewhere, you'll need to modify the paths below accordingly.
+      ```
+      cd ~/Downloads/mFSTSP
+      ```
    
-   *(Your path will differ if you saved the repository contents to a different directory.)*
+      *(Your path will differ if you saved the repository contents to a different directory.)*
+      
+   - For **Windows**:  We will assume that you have downloaded the repository to a folder named `mFSTSP` on the "D:\" drive.  If you saved the `mFSTSP` directory elsewhere, you'll need to modify the paths below accordingly.
+      ```
+      D:
+      cd Projects\mFSTSP
+      ```
+
+      *(Your path will differ if you saved the repository contents to a different directory.)*
    
 3. The mFSTSP solvers are invoked by running the [`main.py`](main.py) Python script with 10 arguments.  This will have the following structure:
    ```
