@@ -13,7 +13,15 @@ This repository contains **test problems**, **solutions**, and the **source code
 
 1. A collection of **test problems (and solutions)** that were used in the analysis described in the [mFSTSP paper](https://ssrn.com/abstract=3338436).
 
-   1. [`InstanceInfo.csv`](InstanceInfo.csv) contains a summary of all 100 "base" test problems, including the number of customers, geographic region (Buffalo, NY or Seattle, WA), and the number of customers within 5 or 10 miles of the depot.  This file may be useful if you are looking for problems with certain properties (e.g., 50-customer problems, or problems in Seattle). 
+   1. [`problems_info.csv`](problems_info.csv) contains a summary of all 100 "base" test problems, including: 
+      - `numCust`: Total number of customers. 
+      - `city`: Geographic region (Buffalo, NY or Seattle, WA).
+      - `LeftLon`, `LowerLat`, `RightLon`, `UpperLat`: Latitude/Longitude coordinates of the bounding region from which customer locations were generated.  These coordinates specify the SW and NE corners of a rectangel.
+      - `widthOfRegion` and `heightOfRegion`: Sizes of the geographic region, available in both miles and meters.
+      - `numCust5milesDepot`: Number of customers located within 5 miles (Euclidean distance) of the depot.
+      - `numCust10milesDepot`: Number of customers located within 10 miles (Euclidean distance) of the depot.
+   
+      This file may be useful if you are looking for problems with certain properties (e.g., 50-customer problems, or problems in Seattle). 
    
    2. [`performance_summary_archive.csv`](performance_summary_archive.csv) provides information about solutions generated for each test problem in the [mFSTSP paper](https://ssrn.com/abstract=3338436). See the ["Archived Problem Solutions"](#Archived-Problem-Solutions) section below for details on the contents of this file.
  
