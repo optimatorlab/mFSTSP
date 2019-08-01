@@ -63,7 +63,7 @@ The mFSTSP source code is compatible with both **Python 2** and **Python 3**.
 It has been tested on **Windows**, **Linux**, and **Mac**.
 
 ### Prerequisites
-- Both the exact and hueristic methods require [Gurobi](http://gurobi.com) as the MILP solver.
+- Both the exact and heuristic methods require [Gurobi](http://gurobi.com) as the MILP solver.
 - The `pandas` Python package is also required.
 
 - For **Linux/Mac**, issue the following terminal command to install `pandas`:
