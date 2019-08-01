@@ -7,6 +7,7 @@ The repository accompanies the following paper, which is currently undergoing a 
 
 The paper provides details on the mFSTSP definition, a corresponding MILP formulation, and the heuristic.
 
+---- 
 
 ## mFSTSP Repository Contents
 This repository contains **test problems**, **solutions**, and the **source code required to run the mFSTSP solver**.  These elements are described in detail below.  
@@ -161,6 +162,8 @@ There are two options for importing this repository's contents to your computer.
    - The solver also generates a file of the form `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv`.  This file will appear within the subdirectory corresponding to the `problemName` within the [`Problems`](Problems) directory (e.g.,  [`Problems/20170608T121632668184`](Problems/20170608T121632668184)) in the above example.  The solutions file contains the objective function value and a detailed schedule for the truck and UAV(s).
       - **NOTE**: If you re-run the solver, solution details will be appended to the bottom of the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file.
 
+----
+
 ## Archived Problem Solutions
 
 This repository contains solutions to the problem instances, as discussed in the analysis section of the [mFSTSP paper](https://ssrn.com/abstract=3338436). 
@@ -199,6 +202,7 @@ Details of each solution may be found in the applicable `tbl_solutions_<UAVtype>
 
 When a problem is run again, using the same settings (e.g., the same `vehicleFileID`, `numUAVs` and `problemType`), the solution details are appended to the applicable `tbl_solutions_<UAVtype>_<# of UAVs>_<solutionMethod>.csv` file.
 
+----
 
 ## Contact Info
 
